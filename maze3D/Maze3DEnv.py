@@ -2,7 +2,7 @@ import random
 import time
 from maze3D.gameObjects import *
 from maze3D.assets import *
-from maze3D.utils import checkTerminal, get_distance_from_goal, checkTerminal_new
+from maze3D.utils import checkTerminal, get_distance_from_goal, checkTerminal
 from rl_models.utils import get_config
 from maze3D.config import layout_up_right, layout_down_right, layout_up_left
 
@@ -59,7 +59,7 @@ class Maze3D:
             fps = clock.get_fps()
             pg.display.set_caption("Running at " + str(int(fps)) + " fps")
             self.observation = self.get_state()
-            if checkTerminal_new(self.board.ball, goal):
+            if checkTerminal(self.board.ball, goal):
                 self.done = True
                 print("Goal reached.")
                 time.sleep(3)
@@ -89,7 +89,7 @@ class Maze3D:
             fps = clock.get_fps()
             pg.display.set_caption("Running at " + str(int(fps)) + " fps")
             self.observation = self.get_state()
-            if checkTerminal_new(self.board.ball, goal) or timedout:
+            if checkTerminal(self.board.ball, goal) or timedout:
                 time.sleep(3)
                 self.done = True
             if reset:

@@ -12,9 +12,6 @@ from rl_models.sac_discrete_agent import DiscreteSACAgent
 
 
 def plot_learning_curve(x, scores, figure_file):
-    # running_avg = np.zeros(len(scores))
-    # for i in range(len(running_avg)):
-    #     running_avg[i] = np.mean(scores[max(0, i - 100):(i + 1)])
     plt.plot(x, scores)
     plt.title('Total Rewards per Episode')
     plt.savefig(figure_file)
@@ -47,27 +44,26 @@ def plot_test_score(data, figure_file, title=None):
         x_axis.append(i + 10)
     means, stds, x_axis = np.asarray(means), np.asarray(stds), np.asarray(x_axis)
     with sns.axes_style("darkgrid"):
-        # meanst = np.array(means.ix[i].values[3:-1], dtype=np.float64)
-        # sdt = np.array(stds.ix[i].values[3:-1], dtype=np.float64)
         ax.plot(x_axis, means, c=clrs[0])
         ax.fill_between(x_axis, means - stds, means + stds, facecolor='blue', alpha=0.5)
     if title:
         plt.title(title)
     plt.savefig(figure_file)
-    # plt.show()
 
 
 def get_plot_and_chkpt_dir(config):
     load_checkpoint, load_checkpoint_name, discrete = [config['game']['load_checkpoint'],
                                                        config['game']['checkpoint_name'], config['SAC']['discrete']]
     loop = str(config['Experiment']['loop'])
-    total_number_updates = config['Experiment']['loop_' + loop]['total_update_cycles']
+    total_number_updates = config['Experiment'][loop+'_mode']['total_update_cycles']
     participant = config['participant_name']
-    learn_every = config['Experiment']['loop_' + loop]['learn_every_n_episodes']
+    learn_every = config['Experiment'][loop+'_mode']['learn_every_n_episodes']
     reward_function = config['SAC']['reward_function']
     allocation = config['Experiment']['scheduling']
 
     alg = 'O_O_a' if config['Experiment']['online_updates'] else 'O_a'
+
+    human_input = 'discrete' if config['game']['discrete'] else 'continuous'
 
     plot_dir = None
     if not load_checkpoint:
@@ -75,11 +71,11 @@ def get_plot_and_chkpt_dir(config):
             chkpt_dir = 'tmp/' + config['SAC']['chkpt_dir']
             plot_dir = 'plots/' + config['SAC']['chkpt_dir']
         else:
-            chkpt_dir = 'tmp/' + 'loop' + loop + '_' + alg + '_' + str(int(
+            chkpt_dir = 'tmp/' + loop + '_' + human_input + '_' + alg + '_' + str(int(
                 total_number_updates / 1000)) + 'K_every' + str(learn_every) + '_' \
                         + reward_function + '_' + allocation + '_' + participant
 
-            plot_dir = 'plots/' + 'loop' + loop + '_' + alg + '_' + str(int(
+            plot_dir = 'plots/' + loop + '_' + alg + '_' + str(int(
                 total_number_updates / 1000)) + 'K_every' + str(learn_every) + '_' \
                         + reward_function + '_' + allocation + '_' + participant
         i = 1
@@ -143,7 +139,6 @@ def reward_function(env, observation, timedout):
     # check if lander in flags and touching the ground
     if env.helipad_x1 < env.lander.position.x < env.helipad_x2 \
             and leg1_touching and leg2_touching:
-        # solved
         return 200, True
 
     # if not done and timedout
@@ -157,14 +152,14 @@ def reward_function(env, observation, timedout):
 def get_sac_agent(config, env, chkpt_dir=None):
     discrete = config['SAC']['discrete']
     if discrete:
-        if config['Experiment']['loop'] == 1:
-            buffer_max_size = config['Experiment']['loop_1']['buffer_memory_size']
-            update_interval = config['Experiment']['loop_1']['learn_every_n_episodes']
-            scale = config['Experiment']['loop_1']['reward_scale']
+        if config['Experiment']['loop'] == 'max_timesteps':
+            buffer_max_size = config['Experiment']['max_timesteps_mode']['buffer_memory_size']
+            update_interval = config['Experiment']['max_timesteps_mode']['learn_every_n_episodes']
+            scale = config['Experiment']['max_timesteps_mode']['reward_scale']
         else:
-            buffer_max_size = config['Experiment']['loop_2']['buffer_memory_size']
-            update_interval = config['Experiment']['loop_2']['learn_every_n_timesteps']
-            scale = config['Experiment']['loop_2']['reward_scale']
+            buffer_max_size = config['Experiment']['max_interactions_mode']['buffer_memory_size']
+            update_interval = config['Experiment']['max_interactions_mode']['learn_every_n_timesteps']
+            scale = config['Experiment']['max_interactions_mode']['reward_scale']
 
         if config['game']['agent_only']:
             # up: 1, down:2, left:3, right:4, upleft:5, upright:6, downleft: 7, downright:8
@@ -179,7 +174,3 @@ def get_sac_agent(config, env, chkpt_dir=None):
         sac = Agent(config=config, env=env, input_dims=env.observation_shape, n_actions=env.action_space.shape,
                     chkpt_dir=chkpt_dir)
     return sac
-
-# data = [i for i in range(100)]
-# plot_test_score(data, "figure_title", "title")
-# exit(0)

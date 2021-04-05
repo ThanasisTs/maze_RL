@@ -3,9 +3,8 @@ from maze3D.Maze3DEnv import Maze3D
 from maze3D.assets import *
 from maze3D.utils import save_logs_and_plot
 
-# Experiment (games)
-from experiment_continuous import Experiment_continuous
-from experiment_discrete import Experiment_discrete
+# Experiment
+from experiment import Experiment
 
 # RL modules
 from rl_models.sac_agent import Agent
@@ -36,28 +35,23 @@ def main(argv):
 
     # create the SAC agent
     sac = get_sac_agent(config, maze, chkpt_dir)
-
+    
     # create the experiment
-    if config['game']['discrete']:
-        experiment = Experiment_discrete(maze, sac, config=config)
-    else:
-        experiment = Experiment_continuous(maze, sac, config=config)
-        
+    experiment = Experiment(maze, sac, config=config, discrete=config['game']['discrete'])
 
     start_experiment = time.time()
 
     # set the goal
     goal = config["game"]["goal"]
 
-    # training loop. loop_1 runs with maximum timesteps
-    # loop_2 runs with maximum interactions (human-agent actions)
+    # training loop 
+    # max_timesteps_mode runs with maximum timesteps
+    # max_interactions_mode runs with maximum interactions (human-agent actions)
     loop = config['Experiment']['loop']
-    if loop == 1:
-        # Experiment 1
-        experiment.loop_1(goal, maze) if config['game']['discrete'] else experiment.loop_1(goal)
+    if loop == 'max_timesteps':
+        experiment.max_timesteps_mode(goal, maze)
     else:
-        # Experiment 2
-        experiment.loop_2(goal)
+        experiment.max_interactions_mode(goal)
 
     end_experiment = time.time()
     experiment_duration = timedelta(seconds=end_experiment - start_experiment - experiment.duration_pause_total)

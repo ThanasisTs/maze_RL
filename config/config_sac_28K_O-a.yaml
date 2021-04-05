@@ -8,7 +8,7 @@ game:
     agent_only: False
     verbose: True
     save: True # save models and logs
-    discrete: True # discrete or continuous human interaction
+    discrete: False # discrete or continuous human input
     # position of the goal on the board
     goal: "left_down" # "left_down" "left_up" "right_down"
 
@@ -42,9 +42,9 @@ Experiment:
   # Loop 1: Trial-based Loop "Accelerating Human-Agent Collaborative Reinforcement Learning "
   # Loop 2: Step-based Loop "Real-World Human-Robot Collaborative Reinforcement Learning"
   ################################################################################################
-  loop: 1 # 1 or 2
+  loop: max_timesteps # max_timesteps or max_interactions
 
-  loop_1:
+  max_timesteps_mode:
     max_episodes: 70  # max training episodes
     max_timesteps: 200  # max timesteps in one episode
     buffer_memory_size: 1000000
@@ -57,7 +57,7 @@ Experiment:
     # solved_reward = 230  # stop training if avg_reward > solved_reward
     log_interval: 10  # print avg reward in the interval
 
-  loop_2:
+  max_interactions_mode:
     total_timesteps: 3500  # total timesteps
     max_timesteps_per_game: 200  # max timesteps per game
     buffer_memory_size: 1000

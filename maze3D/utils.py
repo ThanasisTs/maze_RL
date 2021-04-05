@@ -8,29 +8,7 @@ goals = {"left_down": left_down, "left_up": left_up, "right_down": right_down}
 
 goal_offset = 24
 
-
-def checkTerminal_new(ball, goal):
-    goal = goals[goal]
-    if goal == right_down:
-        if ball.x > goal[0] and ball.y < goal[1]:
-            return True
-    elif goal == left_up:
-        if ball.x < goal[0] and ball.y > goal[1]:
-            return True
-    elif goal == left_down:
-        #if (ball.x + 16 <= goal[0] + goal_offset) and (ball.x - 16 >= goal[0] - goal_offset) \
-        #        and (ball.y + 16 <= goal[1] + goal_offset) and (ball.y - 16 >= goal[1] - goal_offset):
-        if ball.x < goal[0] and ball.y < goal[1]:
-            return True
-    elif goal == center:
-        if ball.x < 0 and ball.y < 0:
-            return True
-    else:
-        return False
-
-
 def checkTerminal(ball, goal):
-    # print("Ball x:{} y{}".format(ball.x, ball.y))
     goal = goals[goal]
     if goal == right_down:
         if ball.x > goal[0] and ball.y < goal[1]:
@@ -80,8 +58,6 @@ def save_logs_and_plot(experiment, chkpt_dir, plot_dir, max_episodes):
     #action_history as returned by get_action_pair: a dyad agent and human {-1,0,1}
     actions = np.asarray(experiment.action_history)
 
-    # action_main = actions[0].flatten()
-    # action_side = actions[1].flatten()
     x_actions = [i + 1 for i in range(len(actions))]
     # Save logs in files
     np.savetxt(chkpt_dir + '/actions.csv', actions, delimiter=',')
@@ -103,8 +79,6 @@ def save_logs_and_plot(experiment, chkpt_dir, plot_dir, max_episodes):
     np.savetxt(chkpt_dir + '/test_length_list.csv', experiment.test_length_list, delimiter=',')
 
     plot_learning_curve(x, experiment.score_history, plot_dir + "/scores.png")
-    # plot_actions(x_actions, action_main, plot_dir + "/action_main.png")
-    # plot_actions(x_actions, action_side, plot_dir + "/action_side.png")
     plot(experiment.length_list, plot_dir + "/length.png", x=[i + 1 for i in range(max_episodes)])
     plot(experiment.episode_duration_list, plot_dir + "/epidode_durations.png",
          x=[i + 1 for i in range(max_episodes)])
@@ -114,8 +88,6 @@ def save_logs_and_plot(experiment, chkpt_dir, plot_dir, max_episodes):
     # plot test logs
     x = [i + 1 for i in range(len(experiment.test_length_list))]
     plot_test_score(experiment.test_score_history, plot_dir + "/test_scores.png")
-    # plot_actions(x_actions, action_main, plot_dir + "/action_main.png")
-    # plot_actions(x_actions, action_side, plot_dir + "/action_side.png")
     plot(experiment.test_length_list, plot_dir + "/test_length.png",
          x=x)
     plot(experiment.test_episode_duration_list, plot_dir + "/test_episode_duration.png",

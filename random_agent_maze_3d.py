@@ -6,16 +6,10 @@ def main():
     maze = Maze3D()
     action = 0
     observation = maze.reset()
-    while 1:
+    while maze.running:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 maze.running = False
-            # if event.type == pg.KEYDOWN:
-            #     if event.key in maze.keys:
-            #         action += maze.keys[event.key]
-            # if event.type == pg.KEYUP:
-            #     if event.key in maze.keys:
-            #         action -= maze.keys[event.key]
         action = maze.action_space.sample()
         observation_, done = maze.step(action)
         if done:
