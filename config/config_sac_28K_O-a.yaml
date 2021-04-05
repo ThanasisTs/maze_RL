@@ -27,6 +27,8 @@ SAC:
   # Sparse_2: +10: goal, -1/step
   # Dense:    +10: goal, -[(distance from goal)/(regularize factor)]
   reward_function: Sparse_2
+  goal_reward: 100
+  state_reward: -1
 #  chkpt_dir: "expert_alg1_online_156K_every10_sparse2_descending"
 
 Experiment:

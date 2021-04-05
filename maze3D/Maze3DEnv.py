@@ -1,5 +1,6 @@
 import random
 import time
+# import maze3D.rewards
 from maze3D.gameObjects import *
 from maze3D.assets import *
 from maze3D.utils import checkTerminal, get_distance_from_goal, checkTerminal
@@ -41,7 +42,9 @@ class Maze3D:
         self.fps = 60
         self.config = get_config(config_file) if config_file is not None else config
         self.reward_type = self.config['SAC']['reward_function'] if 'SAC' in self.config.keys() else None
-
+        self.goal_reward = self.config['SAC']['goal_reward']
+        self.state_reward = self.config['SAC']['state_reward']
+ 
     def step_with_timestep(self, action, timedout, goal, timestep, action_duration=None):
         tmp_time = time.time()
         while (time.time() - tmp_time) < action_duration and not self.done:
@@ -103,8 +106,9 @@ class Maze3D:
                     pg.display.flip()
                     time.sleep(1)
                     i+=1
+        print(self.state_reward)
 
-        reward = self.reward_function_maze(timedout, goal)
+        reward = self.reward_function_maze(timedout, goal=goal)
         return self.observation, reward, self.done
 
     def get_state(self):
@@ -118,46 +122,44 @@ class Maze3D:
         return self.observation
 
     def reward_function_maze(self, timedout, goal=None):
-        if self.reward_type == "Sparse" or self.reward_type == "sparse":
-            return self.reward_function_sparse(timedout)
-        elif self.reward_type == "Dense" or self.reward_type == "dense":
-            return self.reward_function_dense(timedout, goal)
-        elif self.reward_type == "Sparse_2" or self.reward_type == "sparse_2":
-            return self.reward_function_sparse2(timedout)
+    	if self.reward_type == "Sparse" or self.reward_type == "sparse":
+    		return self.reward_function_sparse(timedout)
+    	elif self.reward_type == "Dense" or self.reward_type == "dense":
+    		return self.reward_function_dense(timedout, goal=goal)
+    	elif self.reward_type == "Sparse_2" or self.reward_type == "sparse_2":
+    		return self.reward_function_sparse2(timedout)
 
     def reward_function_sparse(self, timedout):
-        # For every timestep -1
-        # Timed out -50
-        # Reach goal +100
-        if self.done and not timedout:
-            # solved
-            return 100
-        # if not done and timedout
-        if timedout:
-            return -50
-        # return -1 for each time step
-        return -1
-
-    def reward_function_dense(self, timedout, goal=None):
-        # For every timestep -target_distance
-        # Timed out -50
-        # Reach goal +100
-        if self.done:
-            # solved
-            return 100
-        # if not done and timedout
-        if timedout:
-            return -50
-        # return -target_distance/10 for each time step
-        target_distance = get_distance_from_goal(self.board.ball, goal)
-        return -target_distance / 10
+    	# For every timestep -1
+    	# Timed out -50
+    	# Reach goal +100
+    	if self.done and not timedout:
+    		return self.goal_reward
+    	# if not done and timedout
+    	if timedout:
+    		return -50
+    	# return -1 for each time step
+    	return self.state_reward
 
     def reward_function_sparse2(self, timedout):
-        # For every timestep -1
-        # Timed out -50
-        # Reach goal +100
-        if self.done and not timedout:
-            # solved
-            return 10
-        # return -1 for each time step
-        return -1
+    	# For every timestep -1
+    	# Timed out -50
+    	# Reach goal +100
+    	if self.done and not timedout:
+    		return self.goal_reward
+    	# return -1 for each time step
+    	return self.state_reward
+
+    def reward_function_dense(self, timedout, goal=None):
+    	# For every timestep -target_distance
+    	# Timed out -50
+    	# Reach goal +goal_reward
+    	if self.done:
+    		return self.goal_reward
+    	# if not done and timedout
+    	if timedout:
+    		return -50
+    	# return -target_distance/10 for each time step
+    	target_distance = get_distance_from_goal(self.board.ball, goal)
+    	return -target_distance / 10
+
