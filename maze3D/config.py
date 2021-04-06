@@ -100,6 +100,19 @@ glUniformMatrix4fv(PROJ_LOC, 1, GL_FALSE, projection)
 glUniform3f(LIGHT_LOC, -400, 200, 300)
 
 
+# cameraPos = pyrr.Vector3([0,-650,500])
+# up = pyrr.Vector3([0.0,0.0,1.0]) 
+# cameraRight = pyrr.vector.normalise(pyrr.vector3.cross(up, cameraPos))
+# cameraUp = pyrr.vector3.cross(cameraPos, cameraRight)
+# viewMatrix = pyrr.matrix44.create_look_at(cameraPos, pyrr.Vector3([0,0,0]), cameraUp)
+# projection = pyrr.matrix44.create_perspective_projection_matrix(45,600/600,320,720)
+# glUniformMatrix4fv(PROJ_LOC,1,GL_FALSE,projection)
+# glUniformMatrix4fv(VIEW_LOC,1,GL_FALSE,viewMatrix)
+
+# lightPosition = pyrr.Vector3([-400.0,200.0,300.0])
+# glUniform3f(LIGHT_LOC,-400.0,200.0,300.0)
+
+
 layout_up_right = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 1, 1],

@@ -111,10 +111,8 @@ class GameBoard:
                 # will bounce 
                 if self.count_slide == 3:
                     self.slide = True
-                    print('I touch the surface')
                 elif not self.slide:
                     self.count_slide += 1
-                    print('gonna bounch')
                     if velx <= 0 and vely <= 0:
                         return 0.25*abs(vely), 0.25*abs(velx), False
                     return 0.25*np.sign(velx)*abs(vely), 0.25*np.sign(vely)*abs(velx), False
@@ -165,9 +163,7 @@ class GameBoard:
                 #  Otherwise, the ball will bounce 
                 if self.count_slide == 3:
                     self.slide = True
-                    print('I touch the surface')
                 elif not self.slide:
-                    print('gonna bounch')
                     if velx >= 0 and vely >= 0:
                         return -0.25*vely, -0.25*velx, False
                     return 0.25*np.sign(velx)*abs(vely), 0.25*np.sign(vely)*abs(velx), False

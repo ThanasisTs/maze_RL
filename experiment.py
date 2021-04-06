@@ -62,6 +62,7 @@ class Experiment:
         self.test_distance_travel_list = []
         self.reward_list = []
         self.test_reward_list = []
+        self.last_time = 0
 
 
     def max_timesteps_mode(self, goal, maze):
@@ -163,13 +164,13 @@ class Experiment:
             if self.best_reward < episode_reward:
                 self.best_reward = episode_reward
             
-            self.duration_pause_total += duration_pause
-            episode_duration = end - start - duration_pause
-            print("Episode duration: " + str(episode_duration))
+            # self.duration_pause_total += duration_pause
+            # episode_duration = end - start - duration_pause
+            # print("Episode duration: " + str(episode_duration))
 
             self.score_history.append(episode_reward)
 
-            self.episode_duration_list.append(episode_duration) #lll
+            # self.episode_duration_list.append(episode_duration) #lll
             self.reward_list.append(episode_reward) #lll
             self.distance_travel_list.append(dist_travel) #lll
 
@@ -340,24 +341,57 @@ class Experiment:
         duration_pause = 0
         observation = self.env.reset()
         timedout = False
-        
+        tmp_time = 0
         for i_episode in range(1, self.max_episodes + 1):
             self.env.reset()
             actions = [0, 0, 0, 0]  # all keys not pressed
-            for step in range(self.max_timesteps):
-                duration_pause, actions = self.getKeyboard(actions, duration_pause, observation, timedout, False, False)
+            # for step in range(self.max_timesteps):
+            while 1:
+                # duration_pause, actions = self.getKeyboard(actions, duration_pause, observation, timedout, False, self.discrete_input)
+                actions = self.getKeyboardHumanOnly(actions)
                 action = convert_actions(actions)
+
+                action_pair = [0, action[1]]
+
+                if time.time()-tmp_time > 0.2:
+                    print('new action')
+                    print(time.time()-tmp_time)
+                    action_pair[0] = random.choice([-1, 0, 1])
+                    tmp_time = time.time()
+                # print(action)
                 # Environment step
-                observation_, reward, done = self.env.step(action, False, goal, False,
-                                                           self.config['Experiment']['max_timesteps_mode']['action_duration'])
+                observation_, reward, done = self.env.step2(action_pair, False, goal)
                 if done:
                     break
+
+    def getKeyboardHumanOnly(self, actions):
+        pg.key.set_repeat(10,10)
+        actions = [0, 0, 0, 0]
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                return 1
+            if event.type == pg.KEYDOWN:
+                print(time.time() - self.last_time)
+                self.last_time = time.time()
+                if event.key == pg.K_q:
+                    exit(1)
+                if event.key in self.env.keys:
+                    actions[self.env.keys_fotis[event.key]] = 1
+            if event.type == pg.KEYUP:
+                if event.key in self.env.keys:
+                    actions[self.env.keys_fotis[event.key]] = 0
+
+        self.human_actions = convert_actions(actions)
+        print(actions)
+        return actions
 
     def getKeyboard(self, actions, duration_pause, observation_, timedout, reset, discrete):
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return 1
             if event.type == pg.KEYDOWN:
+                print(time.time() - self.last_time)
+                self.last_time = time.time()
                 if event.key == pg.K_SPACE:
                     start_pause = time.time()
                     pause()
@@ -510,7 +544,7 @@ class Experiment:
                 self.compute_agent_action(observation, randomness_critirion, randomness_threshold)
 
                 # compute keyboard action and do env step
-                duration_pause, _, _, _, _ = self.getKeyboard(actions, duration_pause, observation, timedout)
+                duration_pause, _, _, _, _ = self.getKeyboard(actions, duration_pause, observation, timedout, self.discrete)
 
                 maze.board.update()
                 glClearDepth(1000.0)

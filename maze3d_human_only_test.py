@@ -18,7 +18,7 @@ def main(argv):
     maze = Maze3D(config_file=argv[0])
 
     # create the experiment
-    experiment = Experiment(maze, config=test_config)
+    experiment = Experiment(maze, config=test_config, discrete=test_config['game']['discrete'])
 
     # set the goal
     goal = test_config["game"]["goal"]

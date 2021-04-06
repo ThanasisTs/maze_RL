@@ -78,10 +78,13 @@ class Maze3D:
 
     def step(self, action, timedout, goal, reset, action_duration=None):
         tmp_time = time.time()
+        # print("================================================")
         while (time.time() - tmp_time) < action_duration and not self.done:
             # print("Env got action: {}".format(action))
             # self.board.handleKeys(action)  # action is int
+            # print(action)
             self.board.handleKeys_fotis(action)
+            # action = [0, 0]
             self.board.update()
             glClearDepth(1000.0)
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -106,7 +109,27 @@ class Maze3D:
                     pg.display.flip()
                     time.sleep(1)
                     i+=1
-        print(self.state_reward)
+        reward = self.reward_function_maze(timedout, goal=goal)
+        return self.observation, reward, self.done
+
+    def step2(self, action, timedout, goal):
+        tmp_time = time.time()
+        # print("================================================")
+        # print("Env got action: {}".format(action))
+        # self.board.handleKeys(action)  # action is int
+        # print(action)
+        self.board.handleKeys_fotis(action)
+        # action = [0, 0]
+        self.board.update()
+        glClearDepth(1000.0)
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        self.board.draw()
+        pg.display.flip()
+
+        self.dt = clock.tick(self.fps)
+        fps = clock.get_fps()
+        pg.display.set_caption("Running at " + str(int(fps)) + " fps")
+        self.observation = self.get_state()
 
         reward = self.reward_function_maze(timedout, goal=goal)
         return self.observation, reward, self.done
