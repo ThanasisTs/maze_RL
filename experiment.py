@@ -345,45 +345,54 @@ class Experiment:
         for i_episode in range(1, self.max_episodes + 1):
             self.env.reset()
             actions = [0, 0, 0, 0]  # all keys not pressed
-            # for step in range(self.max_timesteps):
-            while 1:
-                # duration_pause, actions = self.getKeyboard(actions, duration_pause, observation, timedout, False, self.discrete_input)
+            while True:
                 actions = self.getKeyboardHumanOnly(actions)
                 action = convert_actions(actions)
-
                 action_pair = [0, action[1]]
-
                 if time.time()-tmp_time > 0.2:
-                    print('new action')
-                    print(time.time()-tmp_time)
-                    action_pair[0] = random.choice([-1, 0, 1])
+                    action_pair[0] = random.choice([0, 1, 2])
                     tmp_time = time.time()
-                # print(action)
+                action_pair = action
+
                 # Environment step
                 observation_, reward, done = self.env.step2(action_pair, False, goal)
+
+                # Discrete Old
+                # duration_pause, actions = self.getKeyboard(actions, duration_pause, observation, timedout, False, True)
+                # action_pair = [0, 0]
+                # action_pair[0] = random.choice([0, 1, 2])
+                # tmp_time = time.time()
+                # observation_, _, done = self.env.step(action_pair, timedout, goal, False, self.config['Experiment']['max_interactions_mode']['action_duration'])
+                # observation = observation_
+
+                # # Continous Old
+                # duration_pause, actions = self.getKeyboard(actions, duration_pause, observation, timedout, False, False)
+                # action_pair = [random.choice([0, 1, 2]), self.human_actions[1]]
+                # tmp_time = time.time()
+                # observation_, _, done = self.env.step(action_pair, timedout, goal, False, self.config['Experiment']['max_interactions_mode']['action_duration'])
+                # observation = observation_
                 if done:
-                    break
+                	break
 
     def getKeyboardHumanOnly(self, actions):
-        pg.key.set_repeat(10,10)
-        actions = [0, 0, 0, 0]
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                return 1
-            if event.type == pg.KEYDOWN:
-                print(time.time() - self.last_time)
-                self.last_time = time.time()
-                if event.key == pg.K_q:
-                    exit(1)
-                if event.key in self.env.keys:
-                    actions[self.env.keys_fotis[event.key]] = 1
-            if event.type == pg.KEYUP:
-                if event.key in self.env.keys:
-                    actions[self.env.keys_fotis[event.key]] = 0
+    	if not self.discrete_input:
+    		pg.key.set_repeat(10,10)
+    	actions = [0, 0, 0, 0]
+    	for event in pg.event.get():
+    		if event.type == pg.QUIT:
+    			return 1
+    		if event.type == pg.KEYDOWN:
+    			self.last_time = time.time()
+    			if event.key == pg.K_q:
+    				exit(1)
+    			if event.key in self.env.keys:
+    				actions[self.env.keys_fotis[event.key]] = 1
+    		if event.type == pg.KEYUP:
+    			if event.key in self.env.keys:
+    				actions[self.env.keys_fotis[event.key]] = 0
 
-        self.human_actions = convert_actions(actions)
-        print(actions)
-        return actions
+    	self.human_actions = convert_actions(actions)
+    	return actions
 
     def getKeyboard(self, actions, duration_pause, observation_, timedout, reset, discrete):
         for event in pg.event.get():

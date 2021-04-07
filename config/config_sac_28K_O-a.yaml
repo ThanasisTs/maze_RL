@@ -8,7 +8,7 @@ game:
     agent_only: False
     verbose: True
     save: True # save models and logs
-    discrete: True # discrete or continuous human input
+    discrete: False # discrete or continuous human input
     # position of the goal on the board
     goal: "left_down" # "left_down" "left_up" "right_down"
 

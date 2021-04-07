@@ -89,28 +89,36 @@ TEXT = [Texture("maze3D/textures/5_secs.png"), Texture("maze3D/textures/4secs.pn
 		Texture("maze3D/textures/2secs.png"), Texture("maze3D/textures/1secs.png"), Texture("maze3D/textures/play.png"), Texture("maze3D/textures/end_game.png")]
 ####################################################################
 
+
 # (field of view, aspect ratio,near,far)
 # control cameraPos, viewMatrix, projection for better 3D view adjusting
-cameraPos = pyrr.Vector3([80, 80, 500])
-up = pyrr.Vector3([0.0, 1.0, 0.0])
+
+# CAMERA AT THE CORNER
+# cameraPos = pyrr.Vector3([-300, -300, 400])
+# up = pyrr.Vector3([1.0, 1.0, 1.0])
+# viewMatrix = pyrr.matrix44.create_look_at(cameraPos, pyrr.Vector3([80, 80, 0]), up)
+# glUniformMatrix4fv(VIEW_LOC, 1, GL_FALSE, viewMatrix)
+# projection = pyrr.matrix44.create_perspective_projection_matrix(80, 800 / 800, 1, 7000)
+# glUniformMatrix4fv(PROJ_LOC, 1, GL_FALSE, projection)
+# glUniform3f(LIGHT_LOC, -400, 200, 300)
+
+# TOP VIEW
+# cameraPos = pyrr.Vector3([80, 80, 500])
+# up = pyrr.Vector3([0.0, 1.0, 0.0])
+# viewMatrix = pyrr.matrix44.create_look_at(cameraPos, pyrr.Vector3([80, 80, 0]), up)
+# glUniformMatrix4fv(VIEW_LOC, 1, GL_FALSE, viewMatrix)
+# projection = pyrr.matrix44.create_perspective_projection_matrix(80, 800 / 800, 1, 7000)
+# glUniformMatrix4fv(PROJ_LOC, 1, GL_FALSE, projection)
+# glUniform3f(LIGHT_LOC, -400, 200, 300)
+
+# SIDE VIEW
+cameraPos = pyrr.Vector3([80, -200, 600])
+up = pyrr.Vector3([0.0,0.0,1.0])
 viewMatrix = pyrr.matrix44.create_look_at(cameraPos, pyrr.Vector3([80, 80, 0]), up)
-glUniformMatrix4fv(VIEW_LOC, 1, GL_FALSE, viewMatrix)
-projection = pyrr.matrix44.create_perspective_projection_matrix(80, 800 / 800, 1, 7000)
-glUniformMatrix4fv(PROJ_LOC, 1, GL_FALSE, projection)
-glUniform3f(LIGHT_LOC, -400, 200, 300)
-
-
-# cameraPos = pyrr.Vector3([0,-650,500])
-# up = pyrr.Vector3([0.0,0.0,1.0]) 
-# cameraRight = pyrr.vector.normalise(pyrr.vector3.cross(up, cameraPos))
-# cameraUp = pyrr.vector3.cross(cameraPos, cameraRight)
-# viewMatrix = pyrr.matrix44.create_look_at(cameraPos, pyrr.Vector3([0,0,0]), cameraUp)
-# projection = pyrr.matrix44.create_perspective_projection_matrix(45,600/600,320,720)
-# glUniformMatrix4fv(PROJ_LOC,1,GL_FALSE,projection)
-# glUniformMatrix4fv(VIEW_LOC,1,GL_FALSE,viewMatrix)
-
-# lightPosition = pyrr.Vector3([-400.0,200.0,300.0])
-# glUniform3f(LIGHT_LOC,-400.0,200.0,300.0)
+projection = pyrr.matrix44.create_perspective_projection_matrix(80, 800/800, 320, 1720)
+glUniformMatrix4fv(PROJ_LOC,1,GL_FALSE,projection)
+glUniformMatrix4fv(VIEW_LOC,1,GL_FALSE,viewMatrix)
+glUniform3f(LIGHT_LOC,-400.0,200.0,300.0)
 
 
 layout_up_right = [
