@@ -49,7 +49,7 @@ def main(argv):
     # max_interactions_mode runs with maximum interactions (human-agent actions)
     loop = config['Experiment']['loop']
     if loop == 'max_timesteps':
-        experiment.max_timesteps_mode(goal, maze)
+        experiment.max_timesteps_mode_new(goal, maze)
     else:
         experiment.max_interactions_mode(goal)
 

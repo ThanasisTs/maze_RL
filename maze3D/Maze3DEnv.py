@@ -42,49 +42,14 @@ class Maze3D:
         self.fps = 60
         self.config = get_config(config_file) if config_file is not None else config
         self.reward_type = self.config['SAC']['reward_function'] if 'SAC' in self.config.keys() else None
-        self.goal_reward = self.config['SAC']['goal_reward']
-        self.state_reward = self.config['SAC']['state_reward']
+        self.goal_reward = self.config['SAC']['goal_reward'] if 'SAC' in self.config.keys() else None
+        self.state_reward = self.config['SAC']['state_reward'] if 'SAC' in self.config.keys() else None
  
-    def step_with_timestep(self, action, timedout, goal, timestep, action_duration=None):
+
+    def stepOld(self, action, timedout, goal, reset, action_duration=None):
         tmp_time = time.time()
         while (time.time() - tmp_time) < action_duration and not self.done:
-            # if (action != [0,0]) :
-            #    print("Env got action: {}".format(action))
-            # self.board.handleKeys(action)  # action is int
-            self.board.handleKeys_fotis(action)
-            self.board.update()
-            glClearDepth(1000.0)
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-            self.board.draw()
-            pg.display.flip()
-
-            self.dt = clock.tick(self.fps)
-            fps = clock.get_fps()
-            pg.display.set_caption("Running at " + str(int(fps)) + " fps")
-            self.observation = self.get_state()
-            if checkTerminal(self.board.ball, goal):
-                self.done = True
-                print("Goal reached.")
-                time.sleep(3)
-            if timedout:
-                self.done = True
-                print("Time out.")
-                time.sleep(3)
-        # end of while 200ms
-
-        reward = self.reward_function_sparse2(timedout)
-        #reward = self.reward_function_linear(timedout, timestep)
-        return self.observation, reward, self.done
-
-    def step(self, action, timedout, goal, reset, action_duration=None):
-        tmp_time = time.time()
-        # print("================================================")
-        while (time.time() - tmp_time) < action_duration and not self.done:
-            # print("Env got action: {}".format(action))
-            # self.board.handleKeys(action)  # action is int
-            # print(action)
-            self.board.handleKeys_fotis(action)
-            # action = [0, 0]
+            self.board.handleKeys(action)
             self.board.update()
             glClearDepth(1000.0)
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -112,14 +77,8 @@ class Maze3D:
         reward = self.reward_function_maze(timedout, goal=goal)
         return self.observation, reward, self.done
 
-    def step2(self, action, timedout, goal):
-        tmp_time = time.time()
-        # print("================================================")
-        # print("Env got action: {}".format(action))
-        # self.board.handleKeys(action)  # action is int
-        # print(action)
-        self.board.handleKeys_fotis(action)
-        # action = [0, 0]
+    def stepNew(self, action, timedout, goal, reset):
+        self.board.handleKeys(action)
         self.board.update()
         glClearDepth(1000.0)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -130,7 +89,20 @@ class Maze3D:
         fps = clock.get_fps()
         pg.display.set_caption("Running at " + str(int(fps)) + " fps")
         self.observation = self.get_state()
-
+        if checkTerminal(self.board.ball, goal) or timedout:
+            time.sleep(3)
+            self.done = True
+        if reset:
+            timeStart = time.time()
+            i=0
+            while time.time() - timeStart <= 5:
+                self.board.update()
+                glClearDepth(1000.0)
+                glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
+                self.board.draw(mode=True, idx=i)
+                pg.display.flip()
+                time.sleep(1)
+                i+=1
         reward = self.reward_function_maze(timedout, goal=goal)
         return self.observation, reward, self.done
 
@@ -158,19 +130,15 @@ class Maze3D:
     	# Reach goal +100
     	if self.done and not timedout:
     		return self.goal_reward
-    	# if not done and timedout
     	if timedout:
     		return -50
-    	# return -1 for each time step
     	return self.state_reward
 
     def reward_function_sparse2(self, timedout):
     	# For every timestep -1
-    	# Timed out -50
     	# Reach goal +100
     	if self.done and not timedout:
     		return self.goal_reward
-    	# return -1 for each time step
     	return self.state_reward
 
     def reward_function_dense(self, timedout, goal=None):
@@ -179,10 +147,17 @@ class Maze3D:
     	# Reach goal +goal_reward
     	if self.done:
     		return self.goal_reward
-    	# if not done and timedout
     	if timedout:
     		return -50
     	# return -target_distance/10 for each time step
     	target_distance = get_distance_from_goal(self.board.ball, goal)
     	return -target_distance / 10
 
+    def reward_function(self, timedout, goal=None):
+    	if self.done:
+    		return self.goal_reward
+    	# Construct here the mathematical reward function
+    	# The reward function can depend on time, the distance of 
+    	# the ball to the goal, it can be static or anything else
+    	# Default is static
+    	return -1

@@ -202,11 +202,18 @@ class GameBoard:
                 if wall != None:
                     wall.update()
 
-    def handleKeys_fotis(self, angleIncrement):
+    def handleKeys(self, angleIncrement):
         if angleIncrement[0] == 2:
             angleIncrement[0] = -1
+        elif angleIncrement[0] == 1:
+            angleIncrement[0] = 1
+
         if angleIncrement[1] == 2:
             angleIncrement[1] = -1
+        elif angleIncrement[1] == 1:
+            angleIncrement[1] = 1
+
+
         self.velocity[0] = 0.01 * angleIncrement[0]
         self.rot_x += self.velocity[0]
         if self.rot_x >= self.max_x_rotation:
@@ -224,20 +231,6 @@ class GameBoard:
         elif self.rot_y <= -self.max_y_rotation:
             self.rot_y = -self.max_y_rotation
             self.velocity[1] = 0
-
-    def handleKeys(self,key):
-        if key in self.keyMap:
-            angleIncrement = self.keyMap[key]
-            self.rot_x += 0.01*angleIncrement[0]
-            if self.rot_x >= self.max_x_rotation:
-                self.rot_x = self.max_x_rotation
-            elif self.rot_x <= -self.max_x_rotation:
-                self.rot_x = -self.max_x_rotation
-            self.rot_y += 0.01*angleIncrement[1]
-            if self.rot_y >= self.max_y_rotation:
-                self.rot_y = self.max_y_rotation
-            elif self.rot_y <= -self.max_y_rotation:
-                self.rot_y = -self.max_y_rotation
     
     def draw(self, mode=False, idx=0):
         glUniformMatrix4fv(MODEL_LOC,1,GL_FALSE,self.rotationMatrix)

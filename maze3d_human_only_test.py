@@ -1,17 +1,13 @@
-import time
-from datetime import timedelta
+import sys
 from experiment import Experiment
 from maze3D.Maze3DEnv import Maze3D
-from maze3D.assets import *
-from rl_models.sac_agent import Agent
-from rl_models.sac_discrete_agent import DiscreteSACAgent
-from rl_models.utils import get_config, get_plot_and_chkpt_dir, get_sac_agent, get_test_plot_and_chkpt_dir
-from maze3D.utils import save_logs_and_plot
-import sys
+from rl_models.utils import get_config
 
 
 def main(argv):
     # get configuration
+    # sets goal, whether the input is discrete or continuous
+    # and the number of episodes and timesteps
     test_config = get_config(argv[0])
 
     # creating environment
@@ -22,9 +18,6 @@ def main(argv):
 
     # set the goal
     goal = test_config["game"]["goal"]
-
-    # training loop
-    loop = test_config['Experiment']['loop']
 
     # Test loop
     experiment.test_human(goal)
