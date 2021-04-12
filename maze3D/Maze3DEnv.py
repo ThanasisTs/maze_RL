@@ -1,6 +1,7 @@
 import random
 import time
 # import maze3D.rewards
+import rewards
 from maze3D.gameObjects import *
 from maze3D.assets import *
 from maze3D.utils import checkTerminal, get_distance_from_goal, checkTerminal
@@ -44,7 +45,7 @@ class Maze3D:
         self.reward_type = self.config['SAC']['reward_function'] if 'SAC' in self.config.keys() else None
         self.goal_reward = self.config['SAC']['goal_reward'] if 'SAC' in self.config.keys() else None
         self.state_reward = self.config['SAC']['state_reward'] if 'SAC' in self.config.keys() else None
- 
+        rewards.main(self.config)
 
     def stepOld(self, action, timedout, goal, reset, action_duration=None):
         tmp_time = time.time()
@@ -74,7 +75,8 @@ class Maze3D:
                     pg.display.flip()
                     time.sleep(1)
                     i+=1
-        reward = self.reward_function_maze(timedout, goal=goal)
+        # reward = self.reward_function_maze(timedout, goal=goal)
+        reward = rewards.reward_function_maze(self.done, timedout, goal=goal)
         return self.observation, reward, self.done
 
     def stepNew(self, action, timedout, goal, reset):
@@ -103,7 +105,8 @@ class Maze3D:
                 pg.display.flip()
                 time.sleep(1)
                 i+=1
-        reward = self.reward_function_maze(timedout, goal=goal)
+        reward = rewards.reward_function_maze(self.done, timedout, goal=goal)
+        # reward = self.reward_function_maze(timedout, goal=goal)
         return self.observation, reward, self.done
 
     def get_state(self):

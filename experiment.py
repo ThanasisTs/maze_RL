@@ -542,12 +542,12 @@ class Experiment:
     				self.last_pressed = self.env.keys_fotis[event.key]
     				actions = [0, 0, 0, 0]
     				actions[self.env.keys_fotis[event.key]] = 1
-    				# print(actions)
 
     		if event.type == pg.KEYUP:
     			if event.key in self.env.keys:
     				actions[self.env.keys_fotis[event.key]] = 0
 
+        # latch the last human command for approximately 200ms
     	if self.key_pressed_count == 13:
     		actions = [0, 0, 0, 0]
     	else:
