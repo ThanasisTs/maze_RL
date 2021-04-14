@@ -68,7 +68,7 @@ class GameBoard:
             biggest = max(direction[0],direction[1])
             smallest = min(direction[0],direction[1])
 
-            # if the grid has an object
+            # if the grid has not an object
             if self.layout[direction[1]][direction[0]] == 0 and not self.slide:
                 return velx, vely, False
 
@@ -85,15 +85,15 @@ class GameBoard:
         xGridCol5, yGridCol5 = math.floor(xCol5/32+5), math.floor(yCol5/32+5)
         
         # left triangle object
-        if self.layout[yGridCol4][xGridCol4] == 4:
+        if self.layout[yGridCol4][xGridCol4] == 4 or self.layout[yGridCol4][xGridCol4] == 6:
             
             # collision angle
             theta = 225*np.pi/180
             xCol, yCol = xBall + 8*np.cos(theta), yBall + 8*np.sin(theta)
             thetaCol = np.arctan((yCol-yObs)/(xCol-32-xObs))*180/np.pi
             
-            if thetaCol > -10:
-                thetaCol = 135.5
+            if self.layout[yGridCol4][xGridCol4] == 6:
+                thetaCol = 135
             else:
                 thetaCol += 180
 
@@ -103,6 +103,7 @@ class GameBoard:
                 self.count_slide = 0
                 self.slide = False
                 self.step = 0
+                self.slide_velx, self.slide_vely = 0, 0
                 return velx, vely, False
             # if thetaCol is greater than 135 degrees, then the ball hit the triangle
             elif thetaCol >= 135:
@@ -118,34 +119,31 @@ class GameBoard:
                     return 0.25*np.sign(velx)*abs(vely), 0.25*np.sign(vely)*abs(velx), False
 
                 if self.slide:
-                    self.count_slide = 0
-                    if accx <= 0 and accy <= 0:
-                        if abs(accx) > abs(accy):
-                            self.slide_velx -= 0.002*accy/accx
-                            self.slide_vely += 0.002*accy/accx
-                            return self.slide_velx, self.slide_vely, False
-                        else:
-                            self.slide_velx += 0.002*accx/accy
-                            self.slide_vely -= 0.002*accx/accy
-                            return self.slide_velx, self.slide_vely, False
+                    if accx > 0 and accy < 0:
+                        self.slide_velx = self.slide_velx + accx + abs(accy)*np.sin(np.pi/4)**2
+                        self.slide_vely += accy*np.sin(np.pi/4)**2
+                    elif accx < 0 and accy > 0:
+                        self.slide_velx += accx*np.sin(np.pi/4)**2
+                        self.slide_vely = self.slide_vely + accy + abs(accx)*np.sin(np.pi/4)**2
+                    elif accx > 0 and accy > 0:
+                        self.slide_velx += accx
+                        self.slide_vely += accy
                     else:
-                        self.slide = False
-                        last_velx, last_vely = self.slide_velx, self.slide_vely
-                        self.slide_velx, self.slide_vely = 0, 0
-                        if accx > 0:
-                            return last_velx + accx, last_vely, False
-                        else:
-                            return last_velx, last_vely + accy, False
+                        self.slide_velx = self.slide_velx + abs(accy)*np.sin(np.pi/4)**2 + accx*np.sin(np.pi/4)**2
+                        self.slide_vely = self.slide_vely + abs(accx)*np.sin(np.pi/4)**2 + accy*np.sin(np.pi/4)**2
+                    
+                    return self.slide_velx, self.slide_vely, False
 
 
         # right triangle
-        elif self.layout[yGridCol5][xGridCol5] == 5:
+        elif self.layout[yGridCol5][xGridCol5] == 5 or self.layout[yGridCol5][xGridCol5] == 6:
             # collision angle
             theta = 45*np.pi/180
             xCol, yCol = xBall + 8*np.cos(theta), yBall + 8*np.sin(theta)
             thetaCol = np.arctan((yCol-yObs)/(xCol-32-xObs))*180/np.pi
-            if thetaCol < -50 or 0 > thetaCol > -10:
-                thetaCol = 134.5
+
+            if self.layout[yGridCol5][xGridCol5] == 6:
+                thetaCol = 135
             else:
                 thetaCol += 180
             
@@ -158,9 +156,9 @@ class GameBoard:
             # if thetaCol is less than 135 degrees, then the ball hit the triangle
             elif thetaCol <= 135:
                 self.count_slide += 1
-                # if collision angle is greater than 135 degrees 10 consecutive times, 
+                # if collision angle is greater than 135 degrees 3 consecutive times, 
                 # then we assume that the ball touches the leaning surface.
-                #  Otherwise, the ball will bounce 
+                # Otherwise, the ball will bounce 
                 if self.count_slide == 3:
                     self.slide = True
                 elif not self.slide:
@@ -168,23 +166,21 @@ class GameBoard:
                         return -0.25*vely, -0.25*velx, False
                     return 0.25*np.sign(velx)*abs(vely), 0.25*np.sign(vely)*abs(velx), False
                 if self.slide:
-                    if accx >= 0 and accy >= 0:
-                        if abs(accx) > abs(accy):
-                            self.slide_velx += 0.002*accy/accx
-                            self.slide_vely -= 0.002*accy/accx
-                            return self.slide_velx, self.slide_vely, False 
-                        else:
-                            self.slide_velx -= 0.002*accy/accx
-                            self.slide_vely += 0.002*accy/accx
-                            return self.slide_velx, self.slide_vely, False
+                    if accx > 0 and accy < 0:
+                        self.slide_velx += accx*np.sin(np.pi/4)**2
+                        self.slide_vely = self.slide_vely + accy - accx*np.sin(np.pi/4)**2
+                    elif accx < 0 and accy > 0:
+                        self.slide_velx = self.slide_velx + accx - accy*np.sin(np.pi/4)**2
+                        self.slide_vely += accy*np.sin(np.pi/4)**2
+                    elif accx < 0 and accy < 0:
+                        self.slide_velx += accx
+                        self.slide_vely += accy
                     else:
-                        self.slide = False
-                        last_velx, last_vely = self.slide_velx, self.slide_vely
-                        self.slide_velx, self.slide_vely = 0, 0
-                        if accx < 0:
-                            return last_velx + accx, last_vely, False
-                        else:
-                            return last_velx, last_vely + accy, False
+                        self.slide_velx = self.slide_velx - accy*np.sin(np.pi/4)**2 + accx*np.sin(np.pi/4)**2
+                        self.slide_vely = self.slide_vely - accx*np.sin(np.pi/4)**2 + accy*np.sin(np.pi/4)**2
+                    
+                    return self.slide_velx, self.slide_vely, False
+
         return velx, vely, False
 
     
@@ -258,6 +254,8 @@ class Wall:
         self.x = x
         self.y = y
         self.z = 0
+        if type == 6:
+            type = 1
         self.type = type-1
 
     def update(self):
@@ -302,6 +300,7 @@ class Ball:
 
         if checkXCol:
             self.velocity[0] *= -0.25
+
         # check y direction
         if checkYCol:
             self.velocity[1] *= -0.25
