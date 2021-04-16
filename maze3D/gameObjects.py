@@ -47,11 +47,11 @@ class GameBoard:
         biggest = max(xGrid, yGrid)
         smallest = min(xGrid, yGrid)
         if biggest > 13 or smallest < 0:
-            return True
+            return True, None
         if self.walls[yGrid][xGrid] != None:
-            if self.layout[yGrid][xGrid] == 1:
-                return True
-        return False
+            if self.layout[yGrid][xGrid] in [1, 6, 7]:
+                return True, self.layout[yGrid][xGrid]
+        return False, None
 
     def collideTriangle(self, checkX, checkY, x, y, velx, vely, accx, accy):
         # find the grid that the ball tends to enter
@@ -83,8 +83,7 @@ class GameBoard:
         xGridCol4, yGridCol4 = math.floor(xCol4/32+5), math.floor(yCol4/32+5)
         xCol5, yCol5 = x + 8*np.cos(45*np.pi/180), y + 8*np.sin(45*np.pi/180)
         xGridCol5, yGridCol5 = math.floor(xCol5/32+5), math.floor(yCol5/32+5)
-        
-        # left triangle object
+
         if self.layout[yGridCol4][xGridCol4] == 4 or self.layout[yGridCol4][xGridCol4] == 6:
             
             # collision angle
@@ -92,6 +91,8 @@ class GameBoard:
             xCol, yCol = xBall + 8*np.cos(theta), yBall + 8*np.sin(theta)
             thetaCol = np.arctan((yCol-yObs)/(xCol-32-xObs))*180/np.pi
             
+            # print(self.layout[yGridCol4][xGridCol4])
+            # print(thetaCol)
             if self.layout[yGridCol4][xGridCol4] == 6:
                 thetaCol = 135
             else:
@@ -102,7 +103,6 @@ class GameBoard:
             if thetaCol < 135:
                 self.count_slide = 0
                 self.slide = False
-                self.step = 0
                 self.slide_velx, self.slide_vely = 0, 0
                 return velx, vely, False
             # if thetaCol is greater than 135 degrees, then the ball hit the triangle
@@ -113,6 +113,7 @@ class GameBoard:
                 if self.count_slide == 3:
                     self.slide = True
                 elif not self.slide:
+                    self.slide = False
                     self.count_slide += 1
                     if velx <= 0 and vely <= 0:
                         return 0.25*abs(vely), 0.25*abs(velx), False
@@ -131,7 +132,6 @@ class GameBoard:
                     else:
                         self.slide_velx = self.slide_velx + abs(accy)*np.sin(np.pi/4)**2 + accx*np.sin(np.pi/4)**2
                         self.slide_vely = self.slide_vely + abs(accx)*np.sin(np.pi/4)**2 + accy*np.sin(np.pi/4)**2
-                    
                     return self.slide_velx, self.slide_vely, False
 
 
@@ -142,16 +142,19 @@ class GameBoard:
             xCol, yCol = xBall + 8*np.cos(theta), yBall + 8*np.sin(theta)
             thetaCol = np.arctan((yCol-yObs)/(xCol-32-xObs))*180/np.pi
 
+            print(self.layout[yGridCol5][xGridCol5])
             if self.layout[yGridCol5][xGridCol5] == 6:
                 thetaCol = 135
             else:
                 thetaCol += 180
             
+            print(thetaCol)
             # if thetaCol is greater than 135 degrees, reset the slide counter and the slide flag
             # and return the commanded velocities
             if thetaCol > 135:
                 self.count_slide = 0
                 self.slide = False
+                self.slide_velx, self.slide_vely = 0, 0
                 return velx, vely, False
             # if thetaCol is less than 135 degrees, then the ball hit the triangle
             elif thetaCol <= 135:
@@ -180,7 +183,6 @@ class GameBoard:
                         self.slide_vely = self.slide_vely - accx*np.sin(np.pi/4)**2 + accy*np.sin(np.pi/4)**2
                     
                     return self.slide_velx, self.slide_vely, False
-
         return velx, vely, False
 
     
@@ -254,7 +256,7 @@ class Wall:
         self.x = x
         self.y = y
         self.z = 0
-        if type == 6:
+        if type in [6,7]:
             type = 1
         self.type = type-1
 
@@ -282,8 +284,8 @@ class Ball:
         translation = pyrr.matrix44.create_from_translation(pyrr.Vector3([self.x,self.y,self.z]))
         self.model = pyrr.matrix44.multiply(translation,self.parent.rotationMatrix)
         acceleration = [-0.1*self.parent.rot_y,0.1*self.parent.rot_x]
-        self.velocity[0] += acceleration[0]
-        self.velocity[1] += acceleration[1]
+        self.velocity[0] += 1*acceleration[0]
+        self.velocity[1] += 1*acceleration[1]
 
         cmd_vel_x = self.velocity[0]
         cmd_vel_y = self.velocity[1]
@@ -295,8 +297,8 @@ class Ball:
         nextY = self.y + self.velocity[1]
 
         # check x direction
-        checkXCol = self.parent.collideSquare(check_collision_X, self.y)
-        checkYCol = self.parent.collideSquare(self.x, check_collision_Y)
+        checkXCol, gridX = self.parent.collideSquare(check_collision_X, self.y)
+        checkYCol, gridY = self.parent.collideSquare(self.x, check_collision_Y)
 
         if checkXCol:
             self.velocity[0] *= -0.25
@@ -305,9 +307,8 @@ class Ball:
         if checkYCol:
             self.velocity[1] *= -0.25
 
-
-        if not checkXCol and not checkYCol:
-            velx, vely, collision = self.parent.collideTriangle(check_collision_X, check_collision_Y, nextX, nextY, cmd_vel_x, cmd_vel_y, acceleration[0], acceleration[1])
+        if (not checkXCol and not checkYCol) or gridX == 7 or gridY == 7:
+            velx, vely, collision = self.parent.collideTriangle(check_collision_X, check_collision_Y, nextX, nextY, self.velocity[0], self.velocity[1], acceleration[0], acceleration[1])
             if collision:
                 self.velocity[0] *= -0.25
                 self.velocity[1] *= -0.25

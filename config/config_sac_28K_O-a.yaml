@@ -61,7 +61,7 @@ Experiment:
 
   max_interactions_mode:
     total_timesteps: 3500  # total timesteps
-    max_timesteps_per_game: 200  # max timesteps per game
+    max_timesteps_per_game: 2000  # max timesteps per game
     buffer_memory_size: 1000
     action_duration: 0.2 # sec
     start_training_step_on_timestep: 500
@@ -75,7 +75,7 @@ Experiment:
 
   test_loop:
     max_games: 10 # total test trials during each test session
-    max_timesteps: 200 # max steps per trial
+    max_timesteps: 2000 # max steps per trial
     action_duration: 0.2 # sec
     max_score: 200
 

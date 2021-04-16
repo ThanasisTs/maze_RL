@@ -520,44 +520,45 @@ class Experiment:
                 	break
 
     def getKeyboardNew(self, duration_pause, actions):
-    	if not self.discrete_input:
-    		pg.key.set_repeat(10) # argument states the difference (in ms) between consecutive press events
+        if not self.discrete_input:
+            pg.key.set_repeat(10) # argument states the difference (in ms) between consecutive press events
     	# actions = [0, 0, 0, 0]
-    	for event in pg.event.get():
-    		if event.type == pg.QUIT:
-    			return 1
-    		if event.type == pg.KEYDOWN:
-    			self.last_time = time.time()
-    			if event.key == pg.K_SPACE:
-    				start_pause = time.time()
-    				pause()
-    				end_pause = time.time()
-    				duration_pause += end_pause - start_pause
+        space_pressed = True
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                return 1
+            if event.type == pg.KEYDOWN:
+                self.last_time = time.time()
+                if event.key == pg.K_SPACE and space_pressed:
+                    space_pressed = False
+                    start_pause = time.time()
+                    actions = [0, 0, 0, 0]
+                    pause()
+                    end_pause = time.time()
+                    duration_pause += end_pause - start_pause
+                if event.key == pg.K_q:
+                    exit(1)
+                if event.key in self.env.keys:
+                    self.key_pressed_count = 0
+                    self.last_pressed = self.env.keys_fotis[event.key]
+                    actions = [0, 0, 0, 0]
+                    actions[self.env.keys_fotis[event.key]] = 1
 
-    			if event.key == pg.K_q:
-    				exit(1)
-
-    			if event.key in self.env.keys:
-    				self.key_pressed_count = 0
-    				self.last_pressed = self.env.keys_fotis[event.key]
-    				actions = [0, 0, 0, 0]
-    				actions[self.env.keys_fotis[event.key]] = 1
-
-    		if event.type == pg.KEYUP:
-    			if event.key in self.env.keys:
-    				actions[self.env.keys_fotis[event.key]] = 0
+            if event.type == pg.KEYUP:
+                if event.key in self.env.keys:
+                    actions[self.env.keys_fotis[event.key]] = 0
 
         # latch the last human command for approximately 200ms
-    	if self.key_pressed_count == 13:
-    		actions = [0, 0, 0, 0]
-    	else:
-    		if self.last_pressed != None:
-    			actions = [0, 0, 0, 0]
-	    		actions[self.last_pressed] = 1
-	    	self.key_pressed_count += 1
+        if self.key_pressed_count == 13:
+            actions = [0, 0, 0, 0]
+        else:
+            if self.last_pressed != None:
+                actions = [0, 0, 0, 0]
+                actions[self.last_pressed] = 1
+            self.key_pressed_count += 1
 
-    	self.human_actions = convert_actions(actions)
-    	return duration_pause, actions
+        self.human_actions = convert_actions(actions)
+        return duration_pause, actions
 
     def getKeyboardOld(self, actions, duration_pause, observation_, timedout, reset, discrete):
         for event in pg.event.get():
@@ -711,6 +712,7 @@ class Experiment:
         best_score = 0
         for game in range(1, self.test_max_episodes + 1): #10 test episodes
             observation = self.env.reset()
+            reset = True
             timedout = False
             episode_reward = 0
             start = time.time()
@@ -718,40 +720,59 @@ class Experiment:
 
             actions = [0, 0, 0, 0]  # all keys not pressed
             duration_pause = 0
+            tmp_time = 0
             for timestep in range(1, self.test_max_timesteps + 1):
                 current_timestep += 1
+                
+                if time.time() - tmp_time > self.config['Experiment']['max_timesteps_mode']['action_duration']:
+                    tmp_time = time.time()
+                    randomness_threshold = self.config['Experiment']['max_interactions_mode']['start_training_step_on_timestep']
+                    self.compute_agent_action(observation, randomness_critirion, randomness_threshold)
 
-                # compute agent's action
-                randomness_threshold = self.config['Experiment']['max_interactions_mode']['start_training_step_on_timestep']
-                self.compute_agent_action(observation, randomness_critirion, randomness_threshold)
+                # get human action
+                duration_pause, _ = self.getKeyboardNew(duration_pause, actions)
 
-                # compute keyboard action and do env step
-                duration_pause, _, _, _, _ = self.getKeyboardOld(actions, duration_pause, observation, timedout, self.discrete)
-
-                maze.board.update()
-                glClearDepth(1000.0)
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-                maze.board.draw()
-                pg.display.flip()
-                maze.dt = pg.time.Clock().tick(maze.fps)
-                fps = pg.time.Clock().get_fps()
-                pg.display.set_caption("Running at " + str(int(fps)) + " fps")
-
-                action = self.get_action_pair();
+                # get human-agent action pair
+                action = self.get_action_pair()
 
                 if timestep == self.test_max_timesteps:
                     timedout = True
 
-                actionAgent = []  # for the agent action
-                actionAgent.append(self.agent_action)  # sto compute_agent_action pio panw to exei kanei update auto
-                actionAgent.append(0)  # no action for the human
+                observation_, reward, done = self.env.stepNew(action, timedout, goal, reset)
 
-                # Environment step for agent action
-                #observation_, reward, done = self.env.step(actionAgent, timedout, goal,
-                #                                           self.config['Experiment']['max_timesteps_mode']['action_duration'])
+                if reset:
+                    reset = False
+                # compute agent's action
+                # randomness_threshold = self.config['Experiment']['max_interactions_mode']['start_training_step_on_timestep']
+                # self.compute_agent_action(observation, randomness_critirion, randomness_threshold)
 
-                observation_, reward, done = self.env.step_with_timestep(actionAgent, timedout, goal, timestep,
-                                                           self.config['Experiment']['max_timesteps_mode']['action_duration'])
+                # # compute keyboard action and do env step
+                # duration_pause, _, _, _, _ = self.getKeyboardOld(actions, duration_pause, observation, timedout, self.discrete)
+
+                # maze.board.update()
+                # glClearDepth(1000.0)
+                # glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+                # maze.board.draw()
+                # pg.display.flip()
+                # maze.dt = pg.time.Clock().tick(maze.fps)
+                # fps = pg.time.Clock().get_fps()
+                # pg.display.set_caption("Running at " + str(int(fps)) + " fps")
+
+                # action = self.get_action_pair();
+
+                # if timestep == self.test_max_timesteps:
+                #     timedout = True
+
+                # actionAgent = []  # for the agent action
+                # actionAgent.append(self.agent_action)  # sto compute_agent_action pio panw to exei kanei update auto
+                # actionAgent.append(0)  # no action for the human
+
+                # # Environment step for agent action
+                # #observation_, reward, done = self.env.step(actionAgent, timedout, goal,
+                # #                                           self.config['Experiment']['max_timesteps_mode']['action_duration'])
+
+                # observation_, reward, done = self.env.step_with_timestep(actionAgent, timedout, goal, timestep,
+                #                                            self.config['Experiment']['max_timesteps_mode']['action_duration'])
 
 
                 #compute distance_travel
