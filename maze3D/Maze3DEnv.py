@@ -29,9 +29,10 @@ class ActionSpace:
 class Maze3D:
     def __init__(self, config=None,  config_file=None):
         # choose randomly one starting point for the ball
+        self.config = get_config(config_file) if config_file is not None else config
         current_layout = random.choice(layouts)
-        # current_layout = layout_up_right
-        self.board = GameBoard(current_layout)
+        self.discrete_input = self.config['game']['discrete']
+        self.board = GameBoard(current_layout, self.discrete_input)
         self.keys = {pg.K_UP: 1, pg.K_DOWN: 2, pg.K_LEFT: 4, pg.K_RIGHT: 8}
         self.keys_fotis = {pg.K_UP: 0, pg.K_DOWN: 1, pg.K_LEFT: 2, pg.K_RIGHT: 3}
         self.running = True
@@ -41,7 +42,6 @@ class Maze3D:
         self.observation_shape = (len(self.observation),)
         self.dt = None
         self.fps = 60
-        self.config = get_config(config_file) if config_file is not None else config
         self.reward_type = self.config['SAC']['reward_function'] if 'SAC' in self.config.keys() else None
         self.goal_reward = self.config['SAC']['goal_reward'] if 'SAC' in self.config.keys() else None
         self.state_reward = self.config['SAC']['state_reward'] if 'SAC' in self.config.keys() else None

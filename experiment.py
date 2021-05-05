@@ -531,10 +531,10 @@ class Experiment:
             if event.type == pg.QUIT:
                 return 1
             if event.type == pg.KEYDOWN:
-                try:
-                    print(time.time() - self.last_time)
-                except:
-                    pass
+                # try:
+                #     print(time.time() - self.last_time)
+                # except:
+                #     pass
                 self.last_time = time.time()
                 if event.key == pg.K_SPACE and space_pressed:
                     space_pressed = False
@@ -572,7 +572,6 @@ class Experiment:
             if event.type == pg.QUIT:
                 return 1
             if event.type == pg.KEYDOWN:
-                print(time.time() - self.last_time)
                 self.last_time = time.time()
                 if event.key == pg.K_SPACE:
                     start_pause = time.time()
