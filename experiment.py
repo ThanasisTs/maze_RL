@@ -490,6 +490,7 @@ class Experiment:
             self.env.reset()
             actions = [0, 0, 0, 0]  # all keys not pressed
             reset = True
+            timedout = False
             for timestep in range(1, self.max_timesteps + 1):
                 # New version
                 duration_pause, actions = self.getKeyboardNew(duration_pause, actions)
@@ -522,12 +523,18 @@ class Experiment:
     def getKeyboardNew(self, duration_pause, actions):
         if not self.discrete_input:
             pg.key.set_repeat(10) # argument states the difference (in ms) between consecutive press events
-    	# actions = [0, 0, 0, 0]
+        else:
+            actions = [0, 0, 0, 0]
+            # pass
         space_pressed = True
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return 1
             if event.type == pg.KEYDOWN:
+                try:
+                    print(time.time() - self.last_time)
+                except:
+                    pass
                 self.last_time = time.time()
                 if event.key == pg.K_SPACE and space_pressed:
                     space_pressed = False
@@ -549,13 +556,13 @@ class Experiment:
                     actions[self.env.keys_fotis[event.key]] = 0
 
         # latch the last human command for approximately 200ms
-        if self.key_pressed_count == 13:
-            actions = [0, 0, 0, 0]
-        else:
-            if self.last_pressed != None:
-                actions = [0, 0, 0, 0]
-                actions[self.last_pressed] = 1
-            self.key_pressed_count += 1
+        # if self.key_pressed_count == 10:
+        #     actions = [0, 0, 0, 0]
+        # else:
+        #     if self.last_pressed != None:
+        #         actions = [0, 0, 0, 0]
+        #         actions[self.last_pressed] = 1
+        #     self.key_pressed_count += 1
 
         self.human_actions = convert_actions(actions)
         return duration_pause, actions

@@ -4,12 +4,12 @@ game:
     second_human: False # Instead of the RL play with a second human
     # position of the goal on the board
     goal: "left_down" # "left_down" "left_up" "right_down"
-    discrete: False
+    discrete: True
 
 Experiment:
   loop: max_timesteps # Test loop
 
   max_timesteps_mode:
     max_episodes: 70  # max training episodes
-    max_timesteps: 10000  # max timesteps in one episode
+    max_timesteps: 1500  # max timesteps in one episode
     action_duration: 0.2
