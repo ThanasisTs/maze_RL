@@ -4,12 +4,11 @@ import time
 import rewards
 from maze3D.gameObjects import *
 from maze3D.assets import *
-from maze3D.utils import checkTerminal, get_distance_from_goal, checkTerminal
+from maze3D.utils import get_distance_from_goal, checkTerminal
 from rl_models.utils import get_config
 from maze3D.config import layout_up_right, layout_down_right, layout_up_left
 
 layouts = [layout_down_right, layout_up_left, layout_up_right]
-
 
 class ActionSpace:
     def __init__(self):
@@ -80,31 +79,43 @@ class Maze3D:
         return self.observation, reward, self.done
 
     def stepNew(self, action, timedout, goal, reset):
-        self.board.handleKeys(action)
-        self.board.update()
-        glClearDepth(1000.0)
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        self.board.draw()
-        pg.display.flip()
+        if not reset:
+            self.board.handleKeys(action)
+            self.board.update()
+            glClearDepth(1000.0)
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+            self.board.draw()
+            pg.display.flip()
 
-        self.dt = clock.tick(self.fps)
-        fps = clock.get_fps()
-        pg.display.set_caption("Running at " + str(int(fps)) + " fps")
-        self.observation = self.get_state()
-        if checkTerminal(self.board.ball, goal) or timedout:
-            time.sleep(5)
-            self.done = True
+            self.dt = clock.tick(self.fps)
+            fps = clock.get_fps()
+            pg.display.set_caption("Running at " + str(int(fps)) + " fps")
+            self.observation = self.get_state()
         if reset:
             timeStart = time.time()
             i=0
+            self.board.update()
             while time.time() - timeStart <= 5:
-                self.board.update()
                 glClearDepth(1000.0)
                 glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-                self.board.draw(mode=True, idx=i)
+                self.board.draw(mode=1, idx=i)
                 pg.display.flip()
                 time.sleep(1)
                 i+=1
+        if checkTerminal(self.board.ball, goal) or timedout:
+            timeStart = time.time()
+            i=0
+            self.board.update()
+            while time.time() - timeStart <= 3:
+                glClearDepth(1000.0)
+                glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
+                self.board.draw(mode=2, idx=i)
+                pg.display.flip()
+                time.sleep(1)
+                i+=1
+
+            # time.sleep(5)
+            self.done = True
         reward = rewards.reward_function_maze(self.done, timedout, goal=goal)
         # reward = self.reward_function_maze(timedout, goal=goal)
         return self.observation, reward, self.done

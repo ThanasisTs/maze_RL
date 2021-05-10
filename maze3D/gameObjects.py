@@ -17,11 +17,11 @@ class GameBoard:
                 self.walls[row].append(None)
                 if layout[row][col] != 0:
                     if layout[row][col] == 2:
-                        self.hole = Hole(32*col - 145, 32*row - 145, self)
+                        self.hole = Hole(32*col - 224, 32*row - 224, self)
                     elif layout[row][col] == 3:
-                        self.ball = Ball((32*col) - 150, (32*row) -150, self)
+                        self.ball = Ball(32*col - 224, 32*row - 224, self)
                     else:
-                        self.walls[row][col] = Wall((32*col) - 160,(32*row) - 160, layout[row][col], self)
+                        self.walls[row][col] = Wall(32*col - 224, 32*row - 224, layout[row][col], self)
 
 
         self.rot_x = 0
@@ -43,8 +43,10 @@ class GameBoard:
     def collideSquare(self, x, y):
         # if the ball hits a square obstacle, it will return True
         # and the collideTriangle will not be called
-        xGrid = math.floor(x / 32 + 5)
-        yGrid = math.floor(y / 32 + 5)
+
+        xGrid = math.floor((x + 224) / 32)
+        yGrid = math.floor((y + 224) / 32)
+
         biggest = max(xGrid, yGrid)
         smallest = min(xGrid, yGrid)
         if biggest > 13 or smallest < 0:
@@ -59,8 +61,8 @@ class GameBoard:
         # grid_directionX stores the coordinates of the ball in the x axis
         # grid_directionY stores the coordinates of the ball in the y axis
         
-        grid_directionX = [math.floor(checkX/32 + 5), math.floor(y/32 + 5)]
-        grid_directionY = [math.floor(x/32 + 5), math.floor(checkY/32 + 5)]
+        grid_directionX = [math.floor((checkX + 224) / 32), math.floor((y + 224) / 32)]
+        grid_directionY = [math.floor((x + 224) / 32), math.floor((checkY + 224) / 32)]
 
         check_collision = [grid_directionX, grid_directionY]
 
@@ -70,20 +72,20 @@ class GameBoard:
             smallest = min(direction[0],direction[1])
 
             # if the grid has not an object
-            if self.layout[direction[1]][direction[0]] == 0 and not self.slide:
+            if self.layout[direction[1]][direction[0]] in [0, 3] and not self.slide:
                 return velx, vely, False
 
         # if code reaches this point, we are at a grid of triangle obstacle
 
         # change reference point to be down left pixel of the grid
         xObs, yObs = 0, 0
-        xBall, yBall = x-32*direction[0] + 160, y-32*direction[1] + 160
+        xBall, yBall = x-32*direction[0] + 224, y-32*direction[1] + 224
 
         # get the point of the ball that will hit the triangle obstacle
         xCol4, yCol4 = x + 8*np.cos(225*np.pi/180), y + 8*np.sin(225*np.pi/180)
-        xGridCol4, yGridCol4 = math.floor(xCol4/32+5), math.floor(yCol4/32+5)
+        xGridCol4, yGridCol4 = math.floor((xCol4 + 224) / 32), math.floor((yCol4 + 224) / 32)
         xCol5, yCol5 = x + 8*np.cos(45*np.pi/180), y + 8*np.sin(45*np.pi/180)
-        xGridCol5, yGridCol5 = math.floor(xCol5/32+5), math.floor(yCol5/32+5)
+        xGridCol5, yGridCol5 = math.floor((xCol5 + 224) / 32), math.floor((yCol5 + 224) / 32)
 
         if self.layout[yGridCol4][xGridCol4] == 4 or self.layout[yGridCol4][xGridCol4] == 6:
             
@@ -143,13 +145,11 @@ class GameBoard:
             xCol, yCol = xBall + 8*np.cos(theta), yBall + 8*np.sin(theta)
             thetaCol = np.arctan((yCol-yObs)/(xCol-32-xObs))*180/np.pi
 
-            print(self.layout[yGridCol5][xGridCol5])
             if self.layout[yGridCol5][xGridCol5] == 6:
                 thetaCol = 135
             else:
                 thetaCol += 180
             
-            print(thetaCol)
             # if thetaCol is greater than 135 degrees, reset the slide counter and the slide flag
             # and return the commanded velocities
             if thetaCol > 135:
@@ -232,8 +232,10 @@ class GameBoard:
             self.rot_y = -self.max_y_rotation
             self.velocity[1] = 0
     
-    def draw(self, mode=False, idx=0):
-        glUniformMatrix4fv(MODEL_LOC,1,GL_FALSE,self.rotationMatrix)
+    def draw(self, mode=0, idx=0):
+        translation = pyrr.matrix44.create_from_translation(pyrr.Vector3([-60,-60,0]))
+        self.model = pyrr.matrix44.multiply(translation,self.rotationMatrix)
+        glUniformMatrix4fv(MODEL_LOC,1,GL_FALSE,self.model)
         glBindVertexArray(BOARD_MODEL.getVAO())
         glBindTexture(GL_TEXTURE_2D,BOARD.getTexture())
         glDrawArrays(GL_TRIANGLES,0,BOARD_MODEL.getVertexCount())
@@ -245,12 +247,20 @@ class GameBoard:
             for wall in row:
                 if wall != None:
                     wall.draw()
-        if mode:
-            translation = pyrr.matrix44.create_from_translation(pyrr.Vector3([0, 400, 0]))
+        if mode == 1:
+            translation = pyrr.matrix44.create_from_translation(pyrr.Vector3([-60, 350, 0]))
             glUniformMatrix4fv(MODEL_LOC,1,GL_FALSE,pyrr.matrix44.multiply(translation, pyrr.matrix44.create_identity()))
             glBindVertexArray(TEXT_MODEL.getVAO())
             glBindTexture(GL_TEXTURE_2D,TEXT[idx].getTexture())
             glDrawArrays(GL_TRIANGLES,0,TEXT_MODEL.getVertexCount())
+
+        elif mode == 2:
+            translation = pyrr.matrix44.create_from_translation(pyrr.Vector3([-60, 350, 0]))
+            glUniformMatrix4fv(MODEL_LOC,1,GL_FALSE,pyrr.matrix44.multiply(translation, pyrr.matrix44.create_identity()))
+            glBindVertexArray(TEXT_MODEL.getVAO())
+            glBindTexture(GL_TEXTURE_2D,TEXT[-1].getTexture())
+            glDrawArrays(GL_TRIANGLES,0,TEXT_MODEL.getVertexCount())
+
 
 class Wall:
     def __init__(self,x,y,type,parent):
@@ -285,12 +295,15 @@ class Ball:
         #first translate to position on board, then rotate with the board
         translation = pyrr.matrix44.create_from_translation(pyrr.Vector3([self.x,self.y,self.z]))
         self.model = pyrr.matrix44.multiply(translation,self.parent.rotationMatrix)
+
         acceleration = [-0.1*self.parent.rot_y,0.1*self.parent.rot_x]
-        self.velocity[0] += 1*acceleration[0]
-        self.velocity[1] += 1*acceleration[1]
+        self.velocity[0] += 0.5*acceleration[0]
+        self.velocity[1] += 0.5*acceleration[1]
 
         cmd_vel_x = self.velocity[0]
         cmd_vel_y = self.velocity[1]
+
+        # print(acceleration)
 
         check_collision_X = self.x + self.velocity[0] + 8*np.sign(self.velocity[0])
         check_collision_Y = self.y + self.velocity[1] + 8*np.sign(self.velocity[1])
@@ -309,8 +322,10 @@ class Ball:
         if checkYCol:
             self.velocity[1] *= -0.25
 
+        # print (self.velocity)
         if (not checkXCol and not checkYCol) or gridX == 7 or gridY == 7:
             velx, vely, collision = self.parent.collideTriangle(check_collision_X, check_collision_Y, nextX, nextY, self.velocity[0], self.velocity[1], acceleration[0], acceleration[1])
+            # print(velx, vely)
             if collision:
                 self.velocity[0] *= -0.25
                 self.velocity[1] *= -0.25

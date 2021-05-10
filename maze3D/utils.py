@@ -1,8 +1,10 @@
 import math
 import numpy as np
+from scipy.spatial import distance
 
 from maze3D.config import left_down, right_down, left_up, center
 from rl_models.utils import plot_learning_curve, plot, plot_test_score
+
 
 goals = {"left_down": left_down, "left_up": left_up, "right_down": right_down}
 
@@ -10,20 +12,23 @@ goal_offset = 24
 
 def checkTerminal(ball, goal):
     goal = goals[goal]
-    if goal == right_down:
-        if ball.x > goal[0] and ball.y < goal[1]:
-            return True
-    elif goal == left_up:
-        if ball.x < goal[0] and ball.y > goal[1]:
-            return True
-    elif goal == left_down:
-        if ball.x < goal[0] and ball.y < goal[1]:
-            return True
-    elif goal == center:
-        if ball.x < 0 and ball.y < 0:
-            return True
-    else:
-        return False
+    if distance.euclidean([ball.x, ball.y], goal) < 5:
+        return True
+    return False    
+    # if goal == right_down:
+    #     if ball.x > goal[0] and ball.y < goal[1]:
+    #         return True
+    # elif goal == left_up:
+    #     if ball.x < goal[0] and ball.y > goal[1]:
+    #         return True
+    # elif goal == left_down:
+    #     if distance.euclidean([ball.x, ball.y], goal) < 5:
+    #         return True
+    # elif goal == center:
+    #     if ball.x < 0 and ball.y < 0:
+    #         return True
+    # else:
+    #     return False
 
 
 def get_distance_from_goal(ball, goal):

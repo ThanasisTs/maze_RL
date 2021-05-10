@@ -85,6 +85,7 @@ WALL_MODELS = [ObjModel("maze3D/models/wall.obj"), ObjModel("maze3D/models/wall_
 				ObjModel("maze3D/models/wall_half_corner_2_big.obj")]
 HOLE_MODEL = ObjModel("maze3D/models/hole.obj")
 TEXT_MODEL = ObjModel("maze3D/models/text.obj")
+
 ########################TEXTURES####################################
 BOARD = Texture("maze3D/textures/board_white.png")
 WALL = Texture("maze3D/textures/wall_simple.jpg")
@@ -92,6 +93,7 @@ BALL = Texture("maze3D/textures/glass.png")
 HOLE = Texture("maze3D/textures/green.png")
 TEXT = [Texture("maze3D/textures/5_secs.png"), Texture("maze3D/textures/4secs.png"), Texture("maze3D/textures/3secs.png"), 
 		Texture("maze3D/textures/2secs.png"), Texture("maze3D/textures/1secs.png"), Texture("maze3D/textures/play.png"), Texture("maze3D/textures/end_game.png")]
+
 ####################################################################
 
 
@@ -108,47 +110,28 @@ TEXT = [Texture("maze3D/textures/5_secs.png"), Texture("maze3D/textures/4secs.pn
 # glUniform3f(LIGHT_LOC, -400, 200, 300)
 
 # TOP VIEW
-# cameraPos = pyrr.Vector3([80, 80, 500])
-# up = pyrr.Vector3([0.0, 1.0, 0.0])
-# viewMatrix = pyrr.matrix44.create_look_at(cameraPos, pyrr.Vector3([80, 80, 0]), up)
-# glUniformMatrix4fv(VIEW_LOC, 1, GL_FALSE, viewMatrix)
-# projection = pyrr.matrix44.create_perspective_projection_matrix(80, 800 / 800, 1, 7000)
-# glUniformMatrix4fv(PROJ_LOC, 1, GL_FALSE, projection)
-# glUniform3f(LIGHT_LOC, -400, 200, 300)
+cameraPos = pyrr.Vector3([0, 0, 600])
+up = pyrr.Vector3([0.0, 1.0, 0.0])
+viewMatrix = pyrr.matrix44.create_look_at(cameraPos, pyrr.Vector3([0, 0, 0]), up)
+glUniformMatrix4fv(VIEW_LOC, 1, GL_FALSE, viewMatrix)
+projection = pyrr.matrix44.create_perspective_projection_matrix(80, 800 / 800, 1, 7000)
+glUniformMatrix4fv(PROJ_LOC, 1, GL_FALSE, projection)
+glUniform3f(LIGHT_LOC, -400, 200, 300)
 
 # SIDE VIEW
-cameraPos = pyrr.Vector3([80, -200, 600])
-up = pyrr.Vector3([0.0,0.0,1.0])
-viewMatrix = pyrr.matrix44.create_look_at(cameraPos, pyrr.Vector3([80, 80, 0]), up)
-projection = pyrr.matrix44.create_perspective_projection_matrix(80, 800/800, 320, 1720)
-glUniformMatrix4fv(PROJ_LOC,1,GL_FALSE,projection)
-glUniformMatrix4fv(VIEW_LOC,1,GL_FALSE,viewMatrix)
-glUniform3f(LIGHT_LOC,-400.0,200.0,300.0)
+# cameraPos = pyrr.Vector3([80, -200, 600])
+# up = pyrr.Vector3([0.0,0.0,1.0])
+# viewMatrix = pyrr.matrix44.create_look_at(cameraPos, pyrr.Vector3([80, 80, 0]), up)
+# projection = pyrr.matrix44.create_perspective_projection_matrix(80, 800/800, 320, 1720)
+# glUniformMatrix4fv(PROJ_LOC,1,GL_FALSE,projection)
+# glUniformMatrix4fv(VIEW_LOC,1,GL_FALSE,viewMatrix)
+# glUniform3f(LIGHT_LOC,-400.0,200.0,300.0)
 
 
 layout_up_right = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 6, 7, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 6, 4, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 5, 6, 4, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 5, 6, 4, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 6, 4, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 5, 6, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 5, 6, 4, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 5, 6, 4, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 5, 6, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 7, 6, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 1, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-]
-
-
-layout_up_left = [
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 6, 7, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 1, 1],
+    [1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 5, 6, 7, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 6, 4, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 5, 6, 4, 0, 3, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 5, 6, 4, 0, 0, 0, 1],
@@ -163,10 +146,10 @@ layout_up_left = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
 
-layout_down_right = [
+layout_up_left = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 6, 7, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 1, 1],
+    [1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 5, 6, 7, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 6, 4, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 5, 6, 4, 0, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 5, 6, 4, 0, 0, 0, 1],
@@ -181,9 +164,26 @@ layout_down_right = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
 
+layout_down_right = [
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 1, 1],
+    [1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 5, 6, 7, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 6, 4, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 5, 6, 4, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 5, 6, 4, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 6, 4, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 5, 6, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 5, 6, 4, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 5, 6, 4, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 5, 6, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 7, 6, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+]
 
 center = [0, 0]
-left_down = [-118, -118]
+left_down = [-160, -160]
 left_up = [-104, 73]
 right_down = [73, -104]
 
