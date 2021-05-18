@@ -17,11 +17,11 @@ class GameBoard:
                 self.walls[row].append(None)
                 if layout[row][col] != 0:
                     if layout[row][col] == 2:
-                        self.hole = Hole(32*col - 224, 32*row - 224, self)
+                        self.hole = Hole(32*col - 240, 32*row - 240, self)
                     elif layout[row][col] == 3:
-                        self.ball = Ball(32*col - 224, 32*row - 224, self)
+                        self.ball = Ball(32*col - 240, 32*row - 240, self)
                     else:
-                        self.walls[row][col] = Wall(32*col - 224, 32*row - 224, layout[row][col], self)
+                        self.walls[row][col] = Wall(32*col - 240, 32*row - 240, layout[row][col], self)
 
 
         self.rot_x = 0
@@ -44,8 +44,8 @@ class GameBoard:
         # if the ball hits a square obstacle, it will return True
         # and the collideTriangle will not be called
 
-        xGrid = math.floor((x + 224) / 32)
-        yGrid = math.floor((y + 224) / 32)
+        xGrid = math.floor((x + 240) / 32)
+        yGrid = math.floor((y + 240) / 32)
 
         biggest = max(xGrid, yGrid)
         smallest = min(xGrid, yGrid)
@@ -61,8 +61,8 @@ class GameBoard:
         # grid_directionX stores the coordinates of the ball in the x axis
         # grid_directionY stores the coordinates of the ball in the y axis
         
-        grid_directionX = [math.floor((checkX + 224) / 32), math.floor((y + 224) / 32)]
-        grid_directionY = [math.floor((x + 224) / 32), math.floor((checkY + 224) / 32)]
+        grid_directionX = [math.floor((checkX + 240) / 32), math.floor((y + 240) / 32)]
+        grid_directionY = [math.floor((x + 240) / 32), math.floor((checkY + 240) / 32)]
 
         check_collision = [grid_directionX, grid_directionY]
 
@@ -79,13 +79,13 @@ class GameBoard:
 
         # change reference point to be down left pixel of the grid
         xObs, yObs = 0, 0
-        xBall, yBall = x-32*direction[0] + 224, y-32*direction[1] + 224
+        xBall, yBall = x-32*direction[0] + 240, y-32*direction[1] + 240
 
         # get the point of the ball that will hit the triangle obstacle
         xCol4, yCol4 = x + 8*np.cos(225*np.pi/180), y + 8*np.sin(225*np.pi/180)
-        xGridCol4, yGridCol4 = math.floor((xCol4 + 224) / 32), math.floor((yCol4 + 224) / 32)
+        xGridCol4, yGridCol4 = math.floor((xCol4 + 240) / 32), math.floor((yCol4 + 240) / 32)
         xCol5, yCol5 = x + 8*np.cos(45*np.pi/180), y + 8*np.sin(45*np.pi/180)
-        xGridCol5, yGridCol5 = math.floor((xCol5 + 224) / 32), math.floor((yCol5 + 224) / 32)
+        xGridCol5, yGridCol5 = math.floor((xCol5 + 240) / 32), math.floor((yCol5 + 240) / 32)
 
         if self.layout[yGridCol4][xGridCol4] == 4 or self.layout[yGridCol4][xGridCol4] == 6:
             
@@ -233,7 +233,7 @@ class GameBoard:
             self.velocity[1] = 0
     
     def draw(self, mode=0, idx=0):
-        translation = pyrr.matrix44.create_from_translation(pyrr.Vector3([-60,-60,0]))
+        translation = pyrr.matrix44.create_from_translation(pyrr.Vector3([-80,-80,0]))
         self.model = pyrr.matrix44.multiply(translation,self.rotationMatrix)
         glUniformMatrix4fv(MODEL_LOC,1,GL_FALSE,self.model)
         glBindVertexArray(BOARD_MODEL.getVAO())

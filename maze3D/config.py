@@ -116,7 +116,7 @@ viewMatrix = pyrr.matrix44.create_look_at(cameraPos, pyrr.Vector3([0, 0, 0]), up
 glUniformMatrix4fv(VIEW_LOC, 1, GL_FALSE, viewMatrix)
 projection = pyrr.matrix44.create_perspective_projection_matrix(80, 800 / 800, 1, 7000)
 glUniformMatrix4fv(PROJ_LOC, 1, GL_FALSE, projection)
-glUniform3f(LIGHT_LOC, -400, 200, 300)
+glUniform3f(LIGHT_LOC, 0, 0, 300)
 
 # SIDE VIEW
 # cameraPos = pyrr.Vector3([80, -200, 600])
