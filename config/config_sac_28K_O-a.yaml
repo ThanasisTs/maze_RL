@@ -48,7 +48,7 @@ Experiment:
 
   max_timesteps_mode:
     max_episodes: 70  # max training episodes
-    max_timesteps: 2000  # max timesteps in one episode
+    max_timesteps: 200  # max timesteps in one episode
     buffer_memory_size: 1000000
     action_duration: 0.2 # sec
     start_training_step_on_episode: 10 # will not train the agent before this trial

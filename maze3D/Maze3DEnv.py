@@ -102,14 +102,19 @@ class Maze3D:
                 pg.display.flip()
                 time.sleep(1)
                 i+=1
-        if checkTerminal(self.board.ball, goal) or timedout:
+        goal_reached = checkTerminal(self.board.ball, goal)
+        # print(timedout)
+        if goal_reached or timedout:
             timeStart = time.time()
             i=0
             self.board.update()
             while time.time() - timeStart <= 3:
                 glClearDepth(1000.0)
                 glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-                self.board.draw(mode=2, idx=i)
+                if goal_reached:
+                    self.board.draw(mode=2, idx=i)
+                else:
+                    self.board.draw(mode=3, idx=i)
                 pg.display.flip()
                 time.sleep(1)
                 i+=1

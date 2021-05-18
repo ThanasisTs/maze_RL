@@ -92,7 +92,7 @@ WALL = Texture("maze3D/textures/wall_simple.jpg")
 BALL = Texture("maze3D/textures/glass.png")
 HOLE = Texture("maze3D/textures/green.png")
 TEXT = [Texture("maze3D/textures/5_secs.png"), Texture("maze3D/textures/4secs.png"), Texture("maze3D/textures/3secs.png"), 
-		Texture("maze3D/textures/2secs.png"), Texture("maze3D/textures/1secs.png"), Texture("maze3D/textures/play.png"), Texture("maze3D/textures/end_game.png")]
+		Texture("maze3D/textures/2secs.png"), Texture("maze3D/textures/1secs.png"), Texture("maze3D/textures/play.png"), Texture("maze3D/textures/goal_hit.png"), Texture("maze3D/textures/timeout.png")]
 
 ####################################################################
 
@@ -183,7 +183,7 @@ layout_down_right = [
 ]
 
 center = [0, 0]
-left_down = [-160, -160]
+left_down = [-176, -176]
 left_up = [-104, 73]
 right_down = [73, -104]
 

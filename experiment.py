@@ -115,7 +115,7 @@ class Experiment:
 
                 if timestep == self.max_timesteps:
                     timedout = True
-
+                print(timestep)
                 observation_, reward, done = self.env.stepNew(action, timedout, goal, reset)
                 
                 if reset:
@@ -491,7 +491,7 @@ class Experiment:
             actions = [0, 0, 0, 0]  # all keys not pressed
             reset = True
             timedout = False
-            for timestep in range(1, self.max_timesteps + 1):
+            for timestep in range(1, self.max_timesteps + 2):
                 # New version
                 duration_pause, actions = self.getKeyboardNew(duration_pause, actions)
                 action = convert_actions(actions)

@@ -214,7 +214,7 @@ class GameBoard:
 
         scaling = 0.05 if self.discrete else 0.01
         
-        self.velocity[0] = scaling * angleIncrement[0]
+        self.velocity[0] = 0.01 * angleIncrement[0]
         self.rot_x += self.velocity[0]
         if self.rot_x >= self.max_x_rotation:
             self.rot_x = self.max_x_rotation
@@ -258,8 +258,15 @@ class GameBoard:
             translation = pyrr.matrix44.create_from_translation(pyrr.Vector3([-60, 350, 0]))
             glUniformMatrix4fv(MODEL_LOC,1,GL_FALSE,pyrr.matrix44.multiply(translation, pyrr.matrix44.create_identity()))
             glBindVertexArray(TEXT_MODEL.getVAO())
+            glBindTexture(GL_TEXTURE_2D,TEXT[-2].getTexture())
+            glDrawArrays(GL_TRIANGLES,0,TEXT_MODEL.getVertexCount())
+        elif mode == 3:
+            translation = pyrr.matrix44.create_from_translation(pyrr.Vector3([-60, 350, 0]))
+            glUniformMatrix4fv(MODEL_LOC,1,GL_FALSE,pyrr.matrix44.multiply(translation, pyrr.matrix44.create_identity()))
+            glBindVertexArray(TEXT_MODEL.getVAO())
             glBindTexture(GL_TEXTURE_2D,TEXT[-1].getTexture())
             glDrawArrays(GL_TRIANGLES,0,TEXT_MODEL.getVertexCount())
+
 
 
 class Wall:
