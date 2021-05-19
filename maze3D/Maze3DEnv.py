@@ -41,9 +41,6 @@ class Maze3D:
         self.observation_shape = (len(self.observation),)
         self.dt = None
         self.fps = 60
-        self.reward_type = self.config['SAC']['reward_function'] if 'SAC' in self.config.keys() else None
-        self.goal_reward = self.config['SAC']['goal_reward'] if 'SAC' in self.config.keys() else None
-        self.state_reward = self.config['SAC']['state_reward'] if 'SAC' in self.config.keys() else None
         rewards.main(self.config)
 
     def stepOld(self, action, timedout, goal, reset, action_duration=None):
@@ -118,12 +115,13 @@ class Maze3D:
                 pg.display.flip()
                 time.sleep(1)
                 i+=1
-
-            # time.sleep(5)
             self.done = True
         reward = rewards.reward_function_maze(self.done, timedout, goal=goal)
         # reward = self.reward_function_maze(timedout, goal=goal)
-        return self.observation, reward, self.done
+        try:
+            return self.observation, reward, self.done, time.time()-timeStart
+        except:
+            return self.observation, reward, self.done, None
 
     def get_state(self):
         # [ball pos x | ball pos y | ball vel x | ball vel y|  theta(x) | phi(y) |  theta_dot(x) | phi_dot(y) | ]
@@ -134,49 +132,3 @@ class Maze3D:
     def reset(self):
         self.__init__(config=self.config)
         return self.observation
-
-    def reward_function_maze(self, timedout, goal=None):
-    	if self.reward_type == "Sparse" or self.reward_type == "sparse":
-    		return self.reward_function_sparse(timedout)
-    	elif self.reward_type == "Dense" or self.reward_type == "dense":
-    		return self.reward_function_dense(timedout, goal=goal)
-    	elif self.reward_type == "Sparse_2" or self.reward_type == "sparse_2":
-    		return self.reward_function_sparse2(timedout)
-
-    def reward_function_sparse(self, timedout):
-    	# For every timestep -1
-    	# Timed out -50
-    	# Reach goal +100
-    	if self.done and not timedout:
-    		return self.goal_reward
-    	if timedout:
-    		return -50
-    	return self.state_reward
-
-    def reward_function_sparse2(self, timedout):
-    	# For every timestep -1
-    	# Reach goal +100
-    	if self.done and not timedout:
-    		return self.goal_reward
-    	return self.state_reward
-
-    def reward_function_dense(self, timedout, goal=None):
-    	# For every timestep -target_distance
-    	# Timed out -50
-    	# Reach goal +goal_reward
-    	if self.done:
-    		return self.goal_reward
-    	if timedout:
-    		return -50
-    	# return -target_distance/10 for each time step
-    	target_distance = get_distance_from_goal(self.board.ball, goal)
-    	return -target_distance / 10
-
-    def reward_function(self, timedout, goal=None):
-    	if self.done:
-    		return self.goal_reward
-    	# Construct here the mathematical reward function
-    	# The reward function can depend on time, the distance of 
-    	# the ball to the goal, it can be static or anything else
-    	# Default is static
-    	return -1

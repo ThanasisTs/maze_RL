@@ -31,7 +31,7 @@ def main(argv):
     chkpt_dir, load_checkpoint_name = [None, None]
     if config["game"]["save"]:
         # create the checkpoint and plot directories for this experiment
-        chkpt_dir, plot_dir, load_checkpoint_name = get_plot_and_chkpt_dir(config)
+        chkpt_dir, plot_dir, load_checkpoint_name = get_plot_and_chkpt_dir(config, argv[1])
 
     # create the SAC agent
     sac = get_sac_agent(config, maze, chkpt_dir)
@@ -48,8 +48,8 @@ def main(argv):
     # max_timesteps_mode runs with maximum timesteps
     # max_interactions_mode runs with maximum interactions (human-agent actions)
     loop = config['Experiment']['loop']
-    if loop == 'max_timesteps':
-        experiment.max_timesteps_mode_new(goal, maze)
+    if loop == 'max_episodes':
+        experiment.max_episodes_mode(goal, maze)
     else:
         experiment.max_interactions_mode(goal)
 

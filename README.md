@@ -1,22 +1,19 @@
 # Maze 3D Collaborative Learning on shared task
+
+### Description
+A human-agent collaborative maze game, solvable only through collaboration. The agent is an Reinforcement Learning (RL). The Soft-Actor Critic (SAC) algorithm is used based on [SLM Lab work](https://github.com/kengz/SLM-Lab) and modifications based on [this work](https://arxiv.org/abs/1910.07207) for discrete action space.The virtual environment of the game is based on [this work](https://github.com/amengede/Marble-Maze). 
+
 ___
 Contact: ligerfotis@gmail.com
 ___
 
-Maze 3D game from: https://github.com/amengede/Marble-Maze
+### Installation
+* Run `source install_dependencies/install.sh`. A python virtual environment will be created and the necessary libraries will be installed. Furthermore, the directory of the repo will be added to the `PYTHONPATH` environmental variable.
 
-Reinforcement Learning (RL) Agent: Soft Actor Critic (SAC)
-  * based on [SLM Lab code](https://github.com/kengz/SLM-Lab)
-  * modifications based on [Christodoulou](https://arxiv.org/abs/1910.07207) for discrete action space
+### Run
+* Run `python game/maze3d_human_only_test.py game/config/config_human_test.yaml` for human-only game.
+* Run `python game/sac_maze3d_train.py game/config/<config_sac> <participant_name> for human-agent game.
 
-### Learn the task collaboratively
-
-* (Recommended) create a python virtual environment
-    
-        python3 -m venv env
-        source venv/bin/activate
-        pip install -r requirements.txt
-    
 
 * Adjust the hyperparameters in the `config_sac.yaml` or the `config_human.yaml` file
     * Note 1: Only discrete SAC is compatible with the game so far

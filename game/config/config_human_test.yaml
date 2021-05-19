@@ -1,5 +1,3 @@
-participant_name: "fotis"
-
 game:
     second_human: False # Instead of the RL play with a second human
     # position of the goal on the board
@@ -7,9 +5,9 @@ game:
     discrete: True
 
 Experiment:
-  loop: max_timesteps # Test loop
+  loop: max_episodes # Test loop
 
-  max_timesteps_mode:
+  max_episodes_mode:
     max_episodes: 70  # max training episodes
-    max_timesteps: 200  # max timesteps in one episode
+    max_duration: 40  # max timesteps in one episode
     action_duration: 0.2

@@ -14,21 +14,7 @@ def checkTerminal(ball, goal):
     goal = goals[goal]
     if distance.euclidean([ball.x, ball.y], goal) < 5:
         return True
-    return False    
-    # if goal == right_down:
-    #     if ball.x > goal[0] and ball.y < goal[1]:
-    #         return True
-    # elif goal == left_up:
-    #     if ball.x < goal[0] and ball.y > goal[1]:
-    #         return True
-    # elif goal == left_down:
-    #     if distance.euclidean([ball.x, ball.y], goal) < 5:
-    #         return True
-    # elif goal == center:
-    #     if ball.x < 0 and ball.y < 0:
-    #         return True
-    # else:
-    #     return False
+    return False
 
 
 def get_distance_from_goal(ball, goal):

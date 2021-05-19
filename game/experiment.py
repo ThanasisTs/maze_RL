@@ -29,15 +29,15 @@ class Experiment:
         self.best_reward = None
         self.best_score_episode = -1
         self.best_score_length = -1
-        self.total_steps = 0
+        self.total_steps = 0 # total number of timesteps for all games
         self.action_history = []
         self.score_history = []
-        self.episode_duration_list = []
+        self.game_duration_list = []
         self.length_list = []
         self.grad_updates_durations = []
         self.test_length_list = []
         self.test_score_history = []
-        self.test_episode_duration_list = []
+        self.test_game_duration_list = []
         self.discrete = config['SAC']['discrete'] if 'SAC' in config.keys() else None
         self.second_human = config['game']['second_human'] if 'game' in config.keys() else None
         self.duration_pause_total = 0
@@ -54,8 +54,8 @@ class Experiment:
         self.max_timesteps_per_game = None
         self.save_models = True
         self.game = None
-        self.test_max_timesteps = self.config['Experiment']['test_loop']['max_timesteps'] if 'test_loop' in config['Experiment'].keys() else None
-        self.test_max_episodes = self.config['Experiment']['test_loop']['max_games'] if 'test_loop' in config['Experiment'].keys() else None #10
+        self.test_max_timesteps = self.config['Experiment']['test_loop']['max_duration'] if 'test_loop' in config['Experiment'].keys() else None
+        self.test_max_episodes = self.config['Experiment']['test_loop']['max_episodes'] if 'test_loop' in config['Experiment'].keys() else None #10
         self.update_cycles = None
 
         self.distance_travel_list = []
@@ -67,33 +67,35 @@ class Experiment:
         self.last_pressed = None
 
     # New experiment function
-    def max_timesteps_mode_new(self, goal, maze):
+    def max_episodes_mode(self, goal, maze):
         flag = True
-        current_timestep = 0
-        running_reward = 0
+        current_timestep = 0 # current timestep for each game
+        running_reward = 0 # total cumulative reward across all games 
         avg_length = 0
 
-        self.best_score = -100 - 1 * self.config['Experiment']['max_timesteps_mode']['max_timesteps'] #-300
+        self.max_games = self.config['Experiment']['max_episodes_mode']['max_episodes']
+        self.max_timesteps = int(self.config['Experiment']['max_episodes_mode']['max_duration']/0.016)
+        self.best_score = -100 - 1 * self.max_timesteps
         self.best_reward = self.best_score
-        self.max_episodes = self.config['Experiment']['max_timesteps_mode']['max_episodes']
-        self.max_timesteps = self.config['Experiment']['max_timesteps_mode']['max_timesteps']
 
 
-        for i_episode in range(1, self.max_episodes + 1):
-            observation = self.env.reset()
-            reset = True
-            timedout = False
-            episode_reward = 0
-            dist_travel = 0
+        for i_episode in range(1, self.max_games + 1):
+            
+            # At the beginning of each game, reset the environment and
+            # several variables
+            observation = self.env.reset() # stores the state of the environment
+            reset = True # used to reset the graphics environment when a new game starts
+            timedout = False # used to check if we hit the maximum game duration
+            game_reward = 0 # keeps track of the rewards for each game
+            dist_travel = 0 # keeps track of the ball's travelled distance 
             test_offline_score = 0
-            start = time.time()
 
             print("Episode: " + str(i_episode))
 
-            actions = [0, 0, 0, 0]  # all keys not pressed
-            duration_pause = 0
-            self.save_models = True
-            tmp_time = 0
+            actions = [0, 0, 0, 0] # store the pressed keys. [0, 0, 0, 0] means that no key is pressed
+            duration_pause = 0 # keeps track of the pause time
+            self.save_models = True # flag for saving RL models
+            tmp_time = 0 # used to check if 200ms have passed and the agent needs to take a new action
 
             for timestep in range(1, self.max_timesteps + 1):
                 self.total_steps += 1
@@ -101,9 +103,9 @@ class Experiment:
 
                 # compute agent's action every 200 ms
                 if not self.second_human:
-                	if time.time() - tmp_time > self.config['Experiment']['max_timesteps_mode']['action_duration']:
+                	if time.time() - tmp_time > self.config['Experiment']['max_episodes_mode']['action_duration']:
                 		tmp_time = time.time()
-                		randomness_threshold = self.config['Experiment']['max_timesteps_mode']['stop_random_agent']
+                		randomness_threshold = self.config['Experiment']['max_episodes_mode']['stop_random_agent']
                 		randomness_critirion = i_episode
                 		flag = self.compute_agent_action(observation, randomness_critirion, randomness_threshold, flag)
 
@@ -115,9 +117,11 @@ class Experiment:
 
                 if timestep == self.max_timesteps:
                     timedout = True
-                print(timestep)
-                observation_, reward, done = self.env.stepNew(action, timedout, goal, reset)
-                
+
+                observation_, reward, done, redundant_end_duration = self.env.stepNew(action, timedout, goal, reset)
+                if timestep == 1:
+                    start = time.time()
+
                 if reset:
                     reset = False
 
@@ -126,7 +130,8 @@ class Experiment:
                 self.save_experience(interaction)
 
                 running_reward += reward
-                episode_reward += reward
+                game_reward += reward
+
                 test_offline_score += -1 if not done else 0
 
                 # compute travelled distance
@@ -135,7 +140,7 @@ class Experiment:
 
                 # online train
                 if not self.config['game']['test_model'] and not self.second_human:
-                    if self.config['Experiment']['online_updates'] and i_episode >= self.config['Experiment']['max_timesteps_mode'][
+                    if self.config['Experiment']['online_updates'] and i_episode >= self.config['Experiment']['max_episodes_mode'][
                         'start_training_step_on_episode']:
                         if self.discrete:
                             self.agent.learn()
@@ -150,33 +155,41 @@ class Experiment:
                 # append row to the dataframe
                 self.df = self.df.append(new_row, ignore_index=True)
 
+                # if the game ended, proceed with the next game
                 if done:
                     break
 
-            end = time.time()
-            if self.best_reward < episode_reward:
-                self.best_reward = episode_reward
+            # keep track of best game reward
+            if self.best_reward < game_reward:
+                self.best_reward = game_reward
             
+            # keep track of total pause duration
+            end = time.time()
             self.duration_pause_total += duration_pause
-            episode_duration = end - start - duration_pause
-            print("Episode duration: " + str(episode_duration))
+            game_duration = end - start - duration_pause - redundant_end_duration
+            print("Game duration: " + str(game_duration))
 
-            self.score_history.append(episode_reward)
+            # keep track of the game reward history 
+            self.score_history.append(game_reward)
+            self.reward_list.append(game_reward)
 
-            self.episode_duration_list.append(episode_duration)
-            self.reward_list.append(episode_reward)
+            # keep track of the game duration
+            self.game_duration_list.append(game_duration)
+            
+            # keep track of the ball's travelled distance
             self.distance_travel_list.append(dist_travel)
 
-            # log_interval: 10  # print avg reward in the interval
-            log_interval = self.config['Experiment']['max_timesteps_mode']['log_interval']
-            avg_ep_duration = np.mean(self.episode_duration_list[-log_interval:])
+            # log_interval: 10  
+            # print avg reward in the interval
+            log_interval = self.config['Experiment']['max_episodes_mode']['log_interval']
+            avg_ep_duration = np.mean(self.game_duration_list[-log_interval:])
             avg_score = np.mean(self.score_history[-log_interval:])
 
             self.length_list.append(current_timestep)
             avg_length += current_timestep
 
             # off policy learning
-            if not self.config['game']['test_model'] and i_episode >= self.config['Experiment']['max_timesteps_mode'][
+            if not self.config['game']['test_model'] and i_episode >= self.config['Experiment']['max_episodes_mode'][
                 'start_training_step_on_episode']: #10
                 if i_episode % self.agent.update_interval == 0:
                     print("off policy learning.")
@@ -200,162 +213,13 @@ class Experiment:
                                                                  avg_ep_duration)
                 current_timestep = 0
         update_cycles = math.ceil(
-            self.config['Experiment']['max_timesteps_mode']['total_update_cycles'])
+            self.config['Experiment']['max_episodes_mode']['total_update_cycles'])
         if not self.second_human and update_cycles > 0:
             try:
                 self.avg_grad_updates_duration = np.mean(self.grad_updates_durations)
             except:
                 print("Exception when calc grad_updates_durations")
 
-    # Old experiment function with changes to encapsulate fotis' continuous and
-    # konstantinos discrete version
-    def max_timesteps_mode(self, goal, maze):
-        flag = True
-        current_timestep = 0
-        running_reward = 0
-        avg_length = 0
-
-        self.best_score = -100 - 1 * self.config['Experiment']['max_timesteps_mode']['max_timesteps'] #-300
-        self.best_reward = self.best_score
-        self.max_episodes = self.config['Experiment']['max_timesteps_mode']['max_episodes']
-        self.max_timesteps = self.config['Experiment']['max_timesteps_mode']['max_timesteps']
-
-        for i_episode in range(1, self.max_episodes + 1):
-            observation = self.env.reset()
-            reset = True
-            timedout = False
-            episode_reward = 0
-            dist_travel = 0
-            test_offline_score = 0
-            start = time.time()
-
-            print("Episode: " + str(i_episode))
-
-            actions = [0, 0, 0, 0]  # all keys not pressed
-            duration_pause = 0
-            self.save_models = True
-
-            for timestep in range(1, self.max_timesteps + 1):
-                self.total_steps += 1
-                current_timestep += 1
-
-                # compute agent's action
-                if not self.second_human:
-                    randomness_threshold = self.config['Experiment']['max_timesteps_mode']['stop_random_agent']
-                    randomness_critirion = i_episode
-                    flag = self.compute_agent_action(observation, randomness_critirion, randomness_threshold, flag)
-
-                if self.discrete_input:
-                    # compute human action and update the env. If no new action is made, do nothing
-                    duration_pause = self.getKeyboardOld(actions, duration_pause, observation, timedout, reset, self.discrete_input)
-                    
-                    # use agent action and upadte the env
-                    actionAgent = [self.agent_action, 0]
-                    observation_, reward, done = self.env.step(actionAgent, timedout, goal, reset,
-                                                               self.config['Experiment']['max_timesteps_mode']['action_duration'])
-                    action = self.get_action_pair()
-
-                else:
-                    # compute human action
-                    duration_pause = self.getKeyboardOld(actions, duration_pause, observation, timedout, reset, self.discrete_input)
-
-                    # get human-agent action
-                    action = self.get_action_pair()
-
-                    if timestep == self.max_timesteps:
-                        timedout = True
-
-                    observation_, reward, done = self.env.step(action, timedout, goal, reset, 
-                                                               self.config['Experiment']['max_timesteps_mode']['action_duration'])
-                
-                if reset:
-                    reset = False
-
-                # add experience to buffer
-                interaction = [observation, self.agent_action, reward, observation_, done]
-                self.save_experience(interaction)
-
-                running_reward += reward
-                episode_reward += reward
-                test_offline_score += -1 if not done else 0
-
-                # compute travelled distance
-                dist_travel += math.sqrt((observation[0] - observation_[0])*(observation[0] - observation_[0]) +
-                                        (observation[1] - observation_[1])*(observation[1] - observation_[1]))
-
-                # online train
-                if not self.config['game']['test_model'] and not self.second_human:
-                    if self.config['Experiment']['online_updates'] and i_episode >= self.config['Experiment']['max_timesteps_mode'][
-                        'start_training_step_on_episode']:
-                        if self.discrete:
-                            self.agent.learn()
-                            self.agent.soft_update_target()
-
-                observation = observation_
-                new_row = {'actions_x': action[0], 'actions_y': action[1], "ball_pos_x": observation[0],
-                           "ball_pos_y": observation[1], "ball_vel_x": observation[2], "ball_vel_y": observation[3],
-                           "tray_rot_x": observation[4], "tray_rot_y": observation[5], "tray_rot_vel_x": observation[6],
-                           "tray_rot_vel_y": observation[7]}
-
-                # append row to the dataframe
-                self.df = self.df.append(new_row, ignore_index=True)
-
-                if done:
-                    break
-
-            end = time.time()
-            if self.best_reward < episode_reward:
-                self.best_reward = episode_reward
-            
-            self.duration_pause_total += duration_pause
-            episode_duration = end - start - duration_pause
-            print("Episode duration: " + str(episode_duration))
-
-            self.score_history.append(episode_reward)
-
-            self.episode_duration_list.append(episode_duration)
-            self.reward_list.append(episode_reward)
-            self.distance_travel_list.append(dist_travel)
-
-            # log_interval: 10  # print avg reward in the interval
-            log_interval = self.config['Experiment']['max_timesteps_mode']['log_interval']
-            avg_ep_duration = np.mean(self.episode_duration_list[-log_interval:])
-            avg_score = np.mean(self.score_history[-log_interval:])
-
-            self.length_list.append(current_timestep)
-            avg_length += current_timestep
-
-            # off policy learning
-            if not self.config['game']['test_model'] and i_episode >= self.config['Experiment']['max_timesteps_mode'][
-                'start_training_step_on_episode']: #10
-                if i_episode % self.agent.update_interval == 0:
-                    print("off policy learning.")
-                    self.updates_scheduler()
-                    if self.update_cycles > 0:
-                        grad_updates_duration = self.grad_updates(self.update_cycles)
-                        self.grad_updates_durations.append(grad_updates_duration)
-
-                        # save the models after each grad update
-                        self.agent.save_models()
-
-                    # Test trials
-                    if i_episode % self.config['Experiment']['test_interval'] == 0 and self.test_max_episodes > 0:
-                        self.test_agent(goal, maze)
-                        print("Continue Training.")
-
-            # logging
-            if self.config["game"]["verbose"]: #true
-                if not self.config['game']['test_model']:
-                    running_reward, avg_length = self.print_logs(i_episode, running_reward, avg_length, log_interval,
-                                                                 avg_ep_duration)
-                current_timestep = 0
-        update_cycles = math.ceil(
-            self.config['Experiment']['max_timesteps_mode']['total_update_cycles'])
-        if not self.second_human and update_cycles > 0:
-            try:
-                self.avg_grad_updates_duration = np.mean(self.grad_updates_durations)
-            except:
-                print("Exception when calc grad_updates_durations")
 
     # Οld loop wrt maximum interactions (currently has bugs)
     def max_interactions_mode(self, goal):
@@ -364,7 +228,7 @@ class Experiment:
         current_timestep = 0
         observation = self.env.reset()
         timedout = False
-        episode_reward = 0
+        game_reward = 0
         actions = [0, 0, 0, 0]  # all keys not pressed
 
         self.best_score = -50 - 1 * self.config['Experiment']['max_interactions_mode']['max_timesteps_per_game']
@@ -391,9 +255,11 @@ class Experiment:
 
             # compute keyboard action
             duration_pause, _ = self.getKeyboardOld(actions, duration_pause)
+            
             # get final action pair
             action = self.get_action_pair()
 
+            # check if we reached the maximum number of timesteps
             if current_timestep == self.max_timesteps_per_game:
                 timedout = True
 
@@ -401,6 +267,7 @@ class Experiment:
             observation_, reward, done = self.env.step(action, timedout, goal,
                                                        self.config['Experiment']['max_interactions_mode']['action_duration'])
 
+            # keep track of old state, new state, action pair, reward
             interaction = [observation, self.agent_action, reward, observation_, done]
 
             # add experience to buffer
@@ -440,21 +307,21 @@ class Experiment:
                         print("Continue Training.")
 
             running_reward += reward
-            episode_reward += reward
+            game_reward += reward
 
             if done:
                 end = time.time()
                 self.game += 1
-                if self.best_reward < episode_reward:
-                    self.best_reward = episode_reward
+                if self.best_reward < game_reward:
+                    self.best_reward = game_reward
                 self.duration_pause_total += duration_pause
-                episode_duration = end - start - duration_pause
+                game_duration = end - start - duration_pause
 
-                self.episode_duration_list.append(episode_duration)
-                self.score_history.append(episode_reward)
+                self.game_duration_list.append(game_duration)
+                self.score_history.append(game_reward)
 
                 log_interval = self.config['Experiment']['max_interactions_mode']['log_interval']
-                avg_ep_duration = np.mean(self.episode_duration_list[-log_interval:])
+                avg_ep_duration = np.mean(self.game_duration_list[-log_interval:])
                 avg_score = np.mean(self.score_history[-log_interval:])
 
                 self.length_list.append(current_timestep)
@@ -470,7 +337,7 @@ class Experiment:
                 current_timestep = 0
                 observation = self.env.reset()
                 timedout = False
-                episode_reward = 0
+                game_reward = 0
                 actions = [0, 0, 0, 0]  # all keys not pressed
                 start = time.time()
 
@@ -480,8 +347,8 @@ class Experiment:
 
     # used for human-only games
     def test_human(self, goal):
-        self.max_episodes = self.config['Experiment']['max_timesteps_mode']['max_episodes']
-        self.max_timesteps = self.config['Experiment']['max_timesteps_mode']['max_timesteps']
+        self.max_episodes = self.config['Experiment']['max_episodes_mode']['max_episodes']
+        self.max_timesteps = int(self.config['Experiment']['max_episodes_mode']['max_duration']/0.016)
         duration_pause = 0
         observation = self.env.reset()
         timedout = False
@@ -491,50 +358,46 @@ class Experiment:
             actions = [0, 0, 0, 0]  # all keys not pressed
             reset = True
             timedout = False
+            start_time = time.time()
             for timestep in range(1, self.max_timesteps + 2):
                 # New version
                 duration_pause, actions = self.getKeyboardNew(duration_pause, actions)
                 action = convert_actions(actions)
-                _, _, done = self.env.stepNew(action, timedout, goal, reset)
+                _, _, done, redundant_end_duration = self.env.stepNew(action, timedout, goal, reset)
 
                 # # Discrete Old
                 # duration_pause, actions = self.getKeyboardOld(actions, duration_pause, observation, timedout, False, True)
                 # action_pair = [0, 0]
                 # action_pair[0] = random.choice([0, 1, 2])
                 # tmp_time = time.time()
-                # observation_, _, done = self.env.step(action_pair, timedout, goal, reset, self.config['Experiment']['max_timesteps_mode']['action_duration'])
+                # observation_, _, done = self.env.step(action_pair, timedout, goal, reset, self.config['Experiment']['max_episodes_mode']['action_duration'])
                 # observation = observation_
 
                 # # Continous Old
                 # duration_pause, actions = self.getKeyboardOld(actions, duration_pause, observation, timedout, False, False)
                 # action_pair = [random.choice([0, 1, 2]), self.human_actions[1]]
                 # tmp_time = time.time()
-                # observation_, _, done = self.env.step(action_pair, timedout, goal, reset, self.config['Experiment']['max_timesteps_mode']['action_duration'])
+                # observation_, _, done = self.env.step(action_pair, timedout, goal, reset, self.config['Experiment']['max_episodes_mode']['action_duration'])
                 # observation = observation_
 
                 if reset:
                 	reset = False
                 if timestep == self.max_timesteps:
-                	timedout = True
+                    timedout = True
 
                 if done:
-                	break
+                    break
 
     def getKeyboardNew(self, duration_pause, actions):
         if not self.discrete_input:
             pg.key.set_repeat(10) # argument states the difference (in ms) between consecutive press events
         else:
             actions = [0, 0, 0, 0]
-            # pass
         space_pressed = True
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return 1
             if event.type == pg.KEYDOWN:
-                # try:
-                #     print(time.time() - self.last_time)
-                # except:
-                #     pass
                 self.last_time = time.time()
                 if event.key == pg.K_SPACE and space_pressed:
                     space_pressed = False
@@ -554,15 +417,6 @@ class Experiment:
             if event.type == pg.KEYUP:
                 if event.key in self.env.keys:
                     actions[self.env.keys_fotis[event.key]] = 0
-
-        # latch the last human command for approximately 200ms
-        # if self.key_pressed_count == 10:
-        #     actions = [0, 0, 0, 0]
-        # else:
-        #     if self.last_pressed != None:
-        #         actions = [0, 0, 0, 0]
-        #         actions[self.last_pressed] = 1
-        #     self.key_pressed_count += 1
 
         self.human_actions = convert_actions(actions)
         return duration_pause, actions
@@ -588,7 +442,7 @@ class Experiment:
                         action = [0, self.human_actions[1]]
 
                         observation_, reward, done = self.env.step(action, timedout, "left_down",
-                                                                False, self.config['Experiment']['max_timesteps_mode']['action_duration'])
+                                                                False, self.config['Experiment']['max_episodes_mode']['action_duration'])
 
             if event.type == pg.KEYUP:
                 if event.key in self.env.keys:
@@ -720,7 +574,7 @@ class Experiment:
             observation = self.env.reset()
             reset = True
             timedout = False
-            episode_reward = 0
+            game_reward = 0
             start = time.time()
             dist_travel = 0
 
@@ -730,7 +584,7 @@ class Experiment:
             for timestep in range(1, self.test_max_timesteps + 1):
                 current_timestep += 1
                 
-                if time.time() - tmp_time > self.config['Experiment']['max_timesteps_mode']['action_duration']:
+                if time.time() - tmp_time > self.config['Experiment']['max_episodes_mode']['action_duration']:
                     tmp_time = time.time()
                     randomness_threshold = self.config['Experiment']['max_interactions_mode']['start_training_step_on_timestep']
                     self.compute_agent_action(observation, randomness_critirion, randomness_threshold)
@@ -744,7 +598,7 @@ class Experiment:
                 if timestep == self.test_max_timesteps:
                     timedout = True
 
-                observation_, reward, done = self.env.stepNew(action, timedout, goal, reset)
+                observation_, reward, done, redundant_end_duration = self.env.stepNew(action, timedout, goal, reset)
 
                 if reset:
                     reset = False
@@ -775,10 +629,10 @@ class Experiment:
 
                 # # Environment step for agent action
                 # #observation_, reward, done = self.env.step(actionAgent, timedout, goal,
-                # #                                           self.config['Experiment']['max_timesteps_mode']['action_duration'])
+                # #                                           self.config['Experiment']['max_episodes_mode']['action_duration'])
 
                 # observation_, reward, done = self.env.step_with_timestep(actionAgent, timedout, goal, timestep,
-                #                                            self.config['Experiment']['max_timesteps_mode']['action_duration'])
+                #                                            self.config['Experiment']['max_episodes_mode']['action_duration'])
 
 
                 #compute distance_travel
@@ -793,7 +647,7 @@ class Experiment:
                 # append row to the dataframe
                 self.df_test = self.df_test.append(new_row, ignore_index=True)
 
-                episode_reward += reward
+                game_reward += reward
 
                 if done:
                     break
@@ -801,8 +655,8 @@ class Experiment:
             end = time.time()
 
             self.duration_pause_total += duration_pause
-            episode_duration = end - start - duration_pause
-            episode_score = self.config['Experiment']['test_loop']['max_score'] + episode_reward  #max_score=200
+            game_duration = end - start - duration_pause
+            episode_score = self.config['Experiment']['test_loop']['max_score'] + game_reward  #max_score=200
 
 
             #pare apo edw ta stoixeia
@@ -810,8 +664,8 @@ class Experiment:
             best_score = episode_score if episode_score > best_score else best_score
             self.test_score_history.append(episode_score)
 
-            self.test_episode_duration_list.append(episode_duration)
-            self.test_reward_list.append(episode_reward)
+            self.test_game_duration_list.append(game_duration)
+            self.test_reward_list.append(game_reward)
             self.test_distance_travel_list.append(dist_travel)
 
 
@@ -820,7 +674,7 @@ class Experiment:
 
         # logging
         self.test_print_logs(np.mean(self.test_score_history[-10:]), np.mean(self.test_length_list[-10:]), best_score,
-                             sum(self.test_episode_duration_list[-10:]))
+                             sum(self.test_game_duration_list[-10:]))
 
     # ref @ experiment.py
     def get_agent_only_action(self):
@@ -859,7 +713,7 @@ class Experiment:
 
             observation = self.env.reset()
             timedout = False
-            episode_reward = 0
+            game_reward = 0
             start = time.time()
 
             actions = [0, 0, 0, 0]  # all keys not pressed
@@ -899,7 +753,7 @@ class Experiment:
                 # append row to the dataframe
                 self.df_test = self.df_test.append(new_row, ignore_index=True)
 
-                episode_reward += reward
+                game_reward += reward
 
                 if done:
                     break
@@ -907,12 +761,12 @@ class Experiment:
             end = time.time()
 
             self.duration_pause_total += duration_pause
-            episode_duration = end - start - duration_pause
+            game_duration = end - start - duration_pause
 
-            self.test_score_history.append(self.config['Experiment']['test_loop']['max_score'] + episode_reward)
+            self.test_score_history.append(self.config['Experiment']['test_loop']['max_score'] + game_reward)
             self.test_length_list.append(current_timestep)
-            self.test_episode_duration_list.append(episode_duration)
-            self.test_reward_list.append(episode_reward)
+            self.test_game_duration_list.append(game_duration)
+            self.test_reward_list.append(game_reward)
             self.test_distance_travel_list.append(dist_travel)
 
             current_timestep = 0
@@ -920,11 +774,11 @@ class Experiment:
     # ref @ experiment.py
     def updates_scheduler(self):
         update_list = [22000, 1000, 1000, 1000, 1000, 1000, 1000]
-        total_update_cycles = self.config['Experiment']['max_timesteps_mode']['total_update_cycles']
+        total_update_cycles = self.config['Experiment']['max_episodes_mode']['total_update_cycles']
         online_updates = 0
         if self.config['Experiment']['online_updates']:
             online_updates = self.max_timesteps * (
-                    self.max_episodes - self.config['Experiment']['max_timesteps_mode']['start_training_step_on_episode'])
+                    self.max_episodes - self.config['Experiment']['max_episodes_mode']['start_training_step_on_episode'])
 
         if self.update_cycles is None:
             self.update_cycles = total_update_cycles - online_updates
