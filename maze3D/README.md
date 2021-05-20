@@ -1,5 +1,7 @@
-#### Virtual Environment Overview
-![Game](pictures/maze.png)
+# Virtual Environment Overview
+![Game](https://github.com/ThanasisTs/maze_RL/blob/main/pictures/maze.png)
+
+
 
 * Wall Cubes
   * Cubes with edge size: 32 pixels
