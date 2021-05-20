@@ -31,7 +31,8 @@ class Maze3D:
         self.config = get_config(config_file) if config_file is not None else config
         current_layout = random.choice(layouts)
         self.discrete_input = self.config['game']['discrete']
-        self.board = GameBoard(current_layout, self.discrete_input)
+        self.rl = True if 'SAC' in self.config.keys() else False
+        self.board = GameBoard(current_layout, self.discrete_input, self.rl)
         self.keys = {pg.K_UP: 1, pg.K_DOWN: 2, pg.K_LEFT: 4, pg.K_RIGHT: 8}
         self.keys_fotis = {pg.K_UP: 0, pg.K_DOWN: 1, pg.K_LEFT: 2, pg.K_RIGHT: 3}
         self.running = True
@@ -43,39 +44,7 @@ class Maze3D:
         self.fps = 60
         rewards.main(self.config)
 
-    def stepOld(self, action, timedout, goal, reset, action_duration=None):
-        tmp_time = time.time()
-        while (time.time() - tmp_time) < action_duration and not self.done:
-            self.board.handleKeys(action)
-            self.board.update()
-            glClearDepth(1000.0)
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-            self.board.draw()
-            pg.display.flip()
-
-            self.dt = clock.tick(self.fps)
-            fps = clock.get_fps()
-            pg.display.set_caption("Running at " + str(int(fps)) + " fps")
-            self.observation = self.get_state()
-            if checkTerminal(self.board.ball, goal) or timedout:
-                time.sleep(3)
-                self.done = True
-            if reset:
-                timeStart = time.time()
-                i=0
-                while time.time() - timeStart <= 5:
-                    self.board.update()
-                    glClearDepth(1000.0)
-                    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-                    self.board.draw(mode=True, idx=i)
-                    pg.display.flip()
-                    time.sleep(1)
-                    i+=1
-        # reward = self.reward_function_maze(timedout, goal=goal)
-        reward = rewards.reward_function_maze(self.done, timedout, goal=goal)
-        return self.observation, reward, self.done
-
-    def stepNew(self, action, timedout, goal, reset):
+    def step(self, action, timedout, goal, reset):
         if not reset:
             self.board.handleKeys(action)
             self.board.update()

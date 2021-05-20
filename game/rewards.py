@@ -6,7 +6,7 @@ def main(config):
 	reward_type = config['SAC']['reward_function'] if 'SAC' in config.keys() else None
 
 def reward_function_maze(done, timedout, goal=None):
-	if reward_type in ["timeout", "Timeout"]:
+	if reward_type in ["Timeout", "timeout"]:
 		return reward_function_timeout_pentalty(done, timedout)
 	elif reward_type in ["Distance", "distance"]:
 		return reward_function_distance(done, timedout, goal=goal)

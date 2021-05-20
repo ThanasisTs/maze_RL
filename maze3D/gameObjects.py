@@ -6,11 +6,15 @@ from scipy.spatial import distance
 import time
 
 class GameBoard:
-    def __init__(self,layout, discrete=False):
+    def __init__(self,layout, discrete=False, rl=False):
         self.velocity = [0, 0]
         self.walls = []
         self.layout = layout
         self.discrete = discrete
+        self.rl = rl
+        self.scaling_x = 0.05 if self.discrete else 0.01
+        self.scaling_y = 0.01 if self.rl else self.scaling_x
+
         for row in range(len(layout)):
             self.walls.append([])
             for col in range(len(layout[0])):
@@ -212,9 +216,9 @@ class GameBoard:
         elif angleIncrement[1] == 1:
             angleIncrement[1] = 1
 
-        scaling = 0.05 if self.discrete else 0.01
-        
-        self.velocity[0] = 0.01 * angleIncrement[0]
+
+
+        self.velocity[0] = self.scaling_y * angleIncrement[0]
         self.rot_x += self.velocity[0]
         if self.rot_x >= self.max_x_rotation:
             self.rot_x = self.max_x_rotation
@@ -223,7 +227,7 @@ class GameBoard:
             self.rot_x = -self.max_x_rotation
             self.velocity[0] = 0
 
-        self.velocity[1] = scaling * angleIncrement[1]
+        self.velocity[1] = self.scaling_x * angleIncrement[1]
         self.rot_y += self.velocity[1]
         if self.rot_y >= self.max_y_rotation:
             self.rot_y = self.max_y_rotation

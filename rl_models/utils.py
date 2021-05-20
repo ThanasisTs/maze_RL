@@ -51,12 +51,12 @@ def plot_test_score(data, figure_file, title=None):
     plt.savefig(figure_file)
 
 
-def get_plot_and_chkpt_dir(config):
+def get_plot_and_chkpt_dir(config, participant_name):
     load_checkpoint, load_checkpoint_name, discrete = [config['game']['load_checkpoint'],
                                                        config['game']['checkpoint_name'], config['SAC']['discrete']]
     loop = str(config['Experiment']['loop'])
     total_number_updates = config['Experiment'][loop+'_mode']['total_update_cycles']
-    participant = config['participant_name']
+    participant = participant_name
     learn_every = config['Experiment'][loop+'_mode']['learn_every_n_episodes']
     reward_function = config['SAC']['reward_function']
     allocation = config['Experiment']['scheduling']
@@ -90,7 +90,7 @@ def get_plot_and_chkpt_dir(config):
         os.makedirs(plot_dir + '_' + str(j))
         plot_dir = plot_dir + '_' + str(j)
 
-        shutil.copy('config/config_sac.yaml', chkpt_dir)
+        shutil.copy('game/config/config_sac.yaml', chkpt_dir)
     else:
         print("Loading Model from checkpoint {}".format(load_checkpoint_name))
         chkpt_dir = load_checkpoint_name

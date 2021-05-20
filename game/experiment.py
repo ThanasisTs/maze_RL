@@ -74,6 +74,8 @@ class Experiment:
         avg_length = 0
 
         self.max_games = self.config['Experiment']['max_episodes_mode']['max_episodes']
+        # The max number of timesteps depends on the maximum episode duration. Each loop (human action, agent action,
+        # environment update) needs approximately 16ms.
         self.max_timesteps = int(self.config['Experiment']['max_episodes_mode']['max_duration']/0.016)
         self.best_score = -100 - 1 * self.max_timesteps
         self.best_reward = self.best_score
@@ -110,7 +112,7 @@ class Experiment:
                 		flag = self.compute_agent_action(observation, randomness_critirion, randomness_threshold, flag)
 
                 # get human action
-                duration_pause, _ = self.getKeyboardNew(duration_pause, actions)
+                duration_pause, _ = self.getKeyboard(duration_pause, actions)
 
                 # get human-agent action pair
                 action = self.get_action_pair()
@@ -118,7 +120,7 @@ class Experiment:
                 if timestep == self.max_timesteps:
                     timedout = True
 
-                observation_, reward, done, redundant_end_duration = self.env.stepNew(action, timedout, goal, reset)
+                observation_, reward, done, redundant_end_duration = self.env.step(action, timedout, goal, reset)
                 if timestep == 1:
                     start = time.time()
 
@@ -361,24 +363,9 @@ class Experiment:
             start_time = time.time()
             for timestep in range(1, self.max_timesteps + 2):
                 # New version
-                duration_pause, actions = self.getKeyboardNew(duration_pause, actions)
+                duration_pause, actions = self.getKeyboard(duration_pause, actions)
                 action = convert_actions(actions)
-                _, _, done, redundant_end_duration = self.env.stepNew(action, timedout, goal, reset)
-
-                # # Discrete Old
-                # duration_pause, actions = self.getKeyboardOld(actions, duration_pause, observation, timedout, False, True)
-                # action_pair = [0, 0]
-                # action_pair[0] = random.choice([0, 1, 2])
-                # tmp_time = time.time()
-                # observation_, _, done = self.env.step(action_pair, timedout, goal, reset, self.config['Experiment']['max_episodes_mode']['action_duration'])
-                # observation = observation_
-
-                # # Continous Old
-                # duration_pause, actions = self.getKeyboardOld(actions, duration_pause, observation, timedout, False, False)
-                # action_pair = [random.choice([0, 1, 2]), self.human_actions[1]]
-                # tmp_time = time.time()
-                # observation_, _, done = self.env.step(action_pair, timedout, goal, reset, self.config['Experiment']['max_episodes_mode']['action_duration'])
-                # observation = observation_
+                _, _, done, redundant_end_duration = self.env.step(action, timedout, goal, reset)
 
                 if reset:
                 	reset = False
@@ -388,7 +375,7 @@ class Experiment:
                 if done:
                     break
 
-    def getKeyboardNew(self, duration_pause, actions):
+    def getKeyboard(self, duration_pause, actions):
         if not self.discrete_input:
             pg.key.set_repeat(10) # argument states the difference (in ms) between consecutive press events
         else:
@@ -420,37 +407,6 @@ class Experiment:
 
         self.human_actions = convert_actions(actions)
         return duration_pause, actions
-
-    def getKeyboardOld(self, actions, duration_pause, observation_, timedout, reset, discrete):
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                return 1
-            if event.type == pg.KEYDOWN:
-                self.last_time = time.time()
-                if event.key == pg.K_SPACE:
-                    start_pause = time.time()
-                    pause()
-                    end_pause = time.time()
-                    duration_pause += end_pause - start_pause
-                if event.key == pg.K_q:
-                    exit(1)
-                if event.key in self.env.keys:
-                    actions[self.env.keys_fotis[event.key]] = 1
-                    if discrete:
-                        self.human_actions = convert_actions(actions)
-
-                        action = [0, self.human_actions[1]]
-
-                        observation_, reward, done = self.env.step(action, timedout, "left_down",
-                                                                False, self.config['Experiment']['max_episodes_mode']['action_duration'])
-
-            if event.type == pg.KEYUP:
-                if event.key in self.env.keys:
-                    actions[self.env.keys_fotis[event.key]] = 0
-
-        self.human_actions = convert_actions(actions)
-        return duration_pause, actions
-
 
     # ref @ sac_maze3d_test.py sac_maze3d_train.py
     def save_info(self, chkpt_dir, experiment_duration, total_games, goal):
@@ -590,7 +546,7 @@ class Experiment:
                     self.compute_agent_action(observation, randomness_critirion, randomness_threshold)
 
                 # get human action
-                duration_pause, _ = self.getKeyboardNew(duration_pause, actions)
+                duration_pause, _ = self.getKeyboard(duration_pause, actions)
 
                 # get human-agent action pair
                 action = self.get_action_pair()
@@ -598,7 +554,7 @@ class Experiment:
                 if timestep == self.test_max_timesteps:
                     timedout = True
 
-                observation_, reward, done, redundant_end_duration = self.env.stepNew(action, timedout, goal, reset)
+                observation_, reward, done, redundant_end_duration = self.env.step(action, timedout, goal, reset)
 
                 if reset:
                     reset = False
