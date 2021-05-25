@@ -1,5 +1,5 @@
 ## Human Input
-The human input is given to the system through the keyboard arrows and can be either discrete or continuous. Discrete input means that every key stroke produces one action. For another action, the human needs to release the button and press another one (or the same). Continuous input means that a human action is given as long as a key is pressed. For a pressed key, a new action will be available every ~15ms.
+The human input is given to the system through the keyboard arrows and can be either discrete or continuous. Discrete input means that every key stroke produces one action. For another action, the human needs to release the button and press another one (or the same). Continuous input means that a new human action is given as long as a key is pressed. For a pressed key, a new action will be available every ~15ms.
 
 ## Experiment
 In the experiment.py the main functions for running the game exist
@@ -22,7 +22,7 @@ In the experiment.py the main functions for running the game exist
 
 
 ## Rewards
-In the rewards.py several reward functions exit. 
+In the rewards.py the following reward functions exist:
 * `reward_function_timeout_penalty`: For every non-terminal state the agent receives a reward of -1. In the goal state the agent receives a reward of 100. If the episode ends due to timeout, the agent gets -50.
 * `reward_function_shafti`: For every non-terminal state the agent receives a reward of -1. In the goal state the agent receives a reward of 100.
 * `reward_function_distance`: For every non-terminal state the agent receives a reward based on its distance from the goal. In the goal state the agent receives a reward of 100. If the episode ends due to timeout, the agent gets -50.
