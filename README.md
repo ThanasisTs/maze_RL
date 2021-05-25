@@ -1,7 +1,7 @@
 # Maze 3D Collaborative Learning on shared task
 
 ### Description
-A human-agent collaborative game in a [virtual environment](https://github.com/ThanasisTs/maze_RL/tree/main/maze3D) based on the work of Shafti et al. (2020) [1]. Collaborative Learning is achieved through deep Reinforcement Learning (DRL). The Soft-Actor Critic (SAC) algorithm is used [2] https://github.com/kengz/SLM-Lab with modifications for discrete action space [3].
+A human-agent collaborative game in a [virtual environment](https://github.com/ThanasisTs/maze_RL/tree/main/maze3D) based on the work of Shafti et al. (2020) [1]. Collaborative Learning is achieved through deep Reinforcement Learning (DRL). The Soft-Actor Critic (SAC) algorithm is used [2] with modifications for discrete action space [3].
 
 
 ### Installation
