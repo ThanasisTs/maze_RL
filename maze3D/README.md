@@ -1,7 +1,7 @@
 # Virtual Environment Overview
 ![Game](https://github.com/ThanasisTs/maze_RL/blob/main/pictures/maze.png)
 
-
+The virtual environment is based on [this work](https://github.com/amengede/Marble-Maze)
 
 * Wall Cubes
   * Cubes with edge size: 32 pixels
