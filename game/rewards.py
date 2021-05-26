@@ -5,11 +5,11 @@ def main(config):
 	global reward_type
 	reward_type = config['SAC']['reward_function'] if 'SAC' in config.keys() else None
 
-def reward_function_maze(done, timedout, goal=None):
+def reward_function_maze(goal_reached, timedout, ball, goal=None):
 	if reward_type in ["Timeout", "timeout"]:
 		return reward_function_timeout_penalty(goal_reached, timedout)
 	elif reward_type in ["Distance", "distance"]:
-		return reward_function_distance(goal_reached, timedout, goal=goal)
+		return reward_function_distance(goal_reached, timedout, ball=ball, goal=goal)
 	elif reward_type in ["Shafti", "shafti"]:
 		return reward_function_shafti(goal_reached)
 
@@ -42,13 +42,19 @@ def reward_function_distance(goal_reached, timedout, ball, goal=None):
 	
 
 def reward_function(goal_reached, timedout, goal=None):
+	# Construct here the mathematical reward function
+  	# The reward function during the game can be static or it can depend on time, the distance of the ball to the goal, etc.
+   	# The reward when the goal reached can also be defined as well as the penalty if the game times out. 
+	# Once you write the function you need to do two things.
+	# First, set it as an option in the `reward_function_maze` function and set the correspoding key
+	# Secondly, choose this key in the config files where you select which reward function to choose
+	# See an example below
 	if goal_reached:
 		return 100
-	# Construct here the mathematical reward function
-	# The reward function can depend on time, the distance of 
-	# the ball to the goal, it can be static or anything else
-	# Default is static
-	return -1		
+	if timedout:
+		return -5
+	#Static reward function
+	return -1
 
 if __name__ == "__main__":
 	main(config)

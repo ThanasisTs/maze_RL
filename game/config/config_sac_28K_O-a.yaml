@@ -28,7 +28,7 @@ SAC:
   # Currently three reward functions are implemented
   # The implementation and the description are in the game/rewards.py file
   # Choose on the the following: Shafti, Distance, Timeout
-  reward_function: Shafti
+  reward_function: Distance
 
 Experiment:
   online_updates: False # True if a signle gradient update happens after every state transition

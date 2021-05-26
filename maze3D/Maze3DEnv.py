@@ -1,7 +1,7 @@
 import random
 import time
 # import maze3D.rewards
-import rewards
+from game import rewards
 from maze3D.gameObjects import *
 from maze3D.assets import *
 from maze3D.utils import get_distance_from_goal, checkTerminal
@@ -69,7 +69,6 @@ class Maze3D:
                 time.sleep(1)
                 i+=1
         goal_reached = checkTerminal(self.board.ball, goal)
-        # print(timedout)
         if goal_reached or timedout:
             timeStart = time.time()
             i=0
@@ -85,8 +84,7 @@ class Maze3D:
                 time.sleep(1)
                 i+=1
             self.done = True
-        reward = rewards.reward_function_maze(self.done, timedout, goal=goal)
-        # reward = self.reward_function_maze(timedout, goal=goal)
+        reward = rewards.reward_function_maze(self.done, timedout, ball=self.board.ball, goal=goal)
         try:
             return self.observation, reward, self.done, time.time()-timeStart
         except:
