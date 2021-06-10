@@ -251,19 +251,21 @@ class GameBoard:
             for wall in row:
                 if wall != None:
                     wall.draw()
+        # Used for reseting the game. Logs above the board "Game starts in ..."
         if mode == 1:
             translation = pyrr.matrix44.create_from_translation(pyrr.Vector3([-60, 350, 0]))
             glUniformMatrix4fv(MODEL_LOC,1,GL_FALSE,pyrr.matrix44.multiply(translation, pyrr.matrix44.create_identity()))
             glBindVertexArray(TEXT_MODEL.getVAO())
             glBindTexture(GL_TEXTURE_2D,TEXT[idx].getTexture())
             glDrawArrays(GL_TRIANGLES,0,TEXT_MODEL.getVertexCount())
-
+        # Used when goal has been reached. Logs above the board "Goal reached"
         elif mode == 2:
             translation = pyrr.matrix44.create_from_translation(pyrr.Vector3([-60, 350, 0]))
             glUniformMatrix4fv(MODEL_LOC,1,GL_FALSE,pyrr.matrix44.multiply(translation, pyrr.matrix44.create_identity()))
             glBindVertexArray(TEXT_MODEL.getVAO())
             glBindTexture(GL_TEXTURE_2D,TEXT[-2].getTexture())
             glDrawArrays(GL_TRIANGLES,0,TEXT_MODEL.getVertexCount())
+        # Used for reseting the game. Logs above the board "Timeout"
         elif mode == 3:
             translation = pyrr.matrix44.create_from_translation(pyrr.Vector3([-60, 350, 0]))
             glUniformMatrix4fv(MODEL_LOC,1,GL_FALSE,pyrr.matrix44.multiply(translation, pyrr.matrix44.create_identity()))
